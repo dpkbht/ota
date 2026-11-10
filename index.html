@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>New firmware campaign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>tailwind.config={theme:{extend:{colors:{bg:'var(--bg)',surface:'var(--surface)',ink:'var(--ink)',muted:'var(--muted)',line:'var(--line)',acc:'var(--acc)','acc-t':'var(--acc-t)',exc:'var(--exc)','exc-t':'var(--exc-t)'},fontFamily:{sans:['Figtree','ui-sans-serif','system-ui','sans-serif']}}}}</script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#F6F7F9;--surface:#FFFFFF;--ink:#12171F;--muted:#5B6574;--line:#E3E6EB;--acc:#1D6B57;--acc-t:#E4F1EC;--on:#FFFFFF;--exc:#B3261E;--exc-t:#FCEBEA;--warn:#8A5A00;--warn-t:#FFF4DB;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0E1217;--surface:#161B22;--ink:#E8ECF1;--muted:#9AA5B4;--line:#2A313B;--acc:#52BE9E;--acc-t:#16322B;--on:#08120F;--exc:#F2938B;--exc-t:#3B1D1B;--warn:#F0C36A;--warn-t:#33290F;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0E1217;--surface:#161B22;--ink:#E8ECF1;--muted:#9AA5B4;--line:#2A313B;--acc:#52BE9E;--acc-t:#16322B;--on:#08120F;--exc:#F2938B;--exc-t:#3B1D1B;--warn:#F0C36A;--warn-t:#33290F;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{font-family:Figtree,ui-sans-serif,system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14.5px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--surface);z-index:50}
+*:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.inp{width:100%;height:40px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit}
+.inp:focus{border-color:var(--acc);outline:none;box-shadow:0 0 0 3px var(--acc-t)}
+.inp.err{border-color:var(--exc)}
+.btn{height:40px;padding:0 16px;border-radius:8px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;transition:background .15s}
+.btn:hover{background:var(--bg)}
+.btn-p{background:var(--acc);border-color:var(--acc);color:var(--on)}
+.btn-p:hover{background:var(--acc);filter:brightness(1.08)}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+.btn-s{height:32px;padding:0 12px;font-size:13px}
+.lbl{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.hint{font-size:12.5px;color:var(--muted);margin-top:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;background:var(--bg);border:1px solid var(--line);font-size:12.5px}
+.sel{border-color:var(--acc);background:var(--acc-t)}
+.tag{display:inline-block;padding:1px 10px;border-radius:999px;font-size:12.5px;font-weight:600}
+.tag-i{color:var(--acc);background:var(--acc-t)}.tag-e{color:var(--exc);background:var(--exc-t)}
+.nav{display:block;padding:8px 10px;border-radius:8px;color:var(--muted);font-weight:500}
+.nav.on{background:var(--acc-t);color:var(--acc)}
+.sw{position:relative;width:40px;height:24px;flex:none}.sw input{position:absolute;inset:0;opacity:0;cursor:pointer;margin:0}
+.sw i{position:absolute;inset:0;border-radius:999px;background:var(--line);transition:.2s}
+.sw i:after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--surface);transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.sw input:checked+i{background:var(--acc)}.sw input:checked+i:after{transform:translateX(16px)}
+.sw input:focus-visible+i{outline:2px solid var(--acc);outline-offset:2px}
+.step{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:2px solid var(--line);color:var(--muted);font-weight:600;flex:1;background:none;cursor:default;text-align:left}
+.step b{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line);font-size:12px;flex:none}
+.step.on{color:var(--ink);border-color:var(--acc)}.step.on b{background:var(--acc);border-color:var(--acc);color:var(--on)}
+.step.done{color:var(--ink);cursor:pointer}.step.done b{border-color:var(--acc);color:var(--acc)}
+#drp{transform:translateX(100%);transition:transform .22s ease}#dr.open #drp{transform:none}
+#dr{visibility:hidden}#dr.open{visibility:visible}
+@media (prefers-reduced-motion:reduce){#drp,.sw i,.sw i:after{transition:none}}
+</style>
+</head>
+<body>
+<div class="flex min-h-screen">
+<aside class="hidden md:flex w-56 shrink-0 flex-col gap-0.5 border-r border-line bg-surface p-4 sticky top-0 h-screen">
+  <div class="px-2 py-3 text-lg font-bold">ChargeCMS</div>
+  <a class="nav" href="#">Dashboard</a><a class="nav" href="#">Chargers</a><a class="nav" href="#">Stations</a><a class="nav" href="#">Sessions</a>
+  <div class="px-2.5 pt-5 pb-1 text-[13px] text-muted">Firmware</div>
+  <a class="nav" href="#">Packages</a><a class="nav on" href="#">Campaigns</a>
+  <div class="mt-auto"><a class="nav" href="#">Settings</a></div>
+</aside>
+<main class="flex-1 min-w-0">
+  <header class="sticky z-40 flex items-center justify-between gap-3 border-b border-line bg-surface px-4 md:px-8 h-14" style="top:env(safe-area-inset-top,0px)">
+    <nav class="text-muted text-[13.5px] truncate" aria-label="Breadcrumb">Firmware / Campaigns / <span class="text-ink font-medium">New campaign</span></nav>
+    <div class="flex items-center gap-2"><button class="btn btn-s" id="draft">Save draft</button><span class="grid place-items-center w-8 h-8 rounded-full bg-acc-t text-acc font-bold text-[13px]">DK</span></div>
+  </header>
+  <div class="mx-auto max-w-6xl p-4 md:p-8">
+    <h1 class="text-2xl font-bold tracking-tight">New firmware campaign</h1>
+    <p class="text-muted mt-1">Choose a package, pick the chargers that should get it, and schedule the rollout.</p>
+    <div id="steps" class="mt-6 flex gap-4" role="list"></div>
+    <div id="flow" class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <section>
+        <!-- Step 1 -->
+        <div id="p1" class="card p-5 md:p-6 space-y-6">
+          <div><label class="lbl" for="title">Campaign name</label><input id="title" class="inp" value="AC-7 winter update" autocomplete="off"><p id="terr" class="hint hidden" style="color:var(--exc)">Give the campaign a name so your team can find it later.</p></div>
+          <div><span class="lbl">Firmware package</span><div id="pkgs" class="grid gap-3" role="radiogroup"></div><p class="hint">Packages are uploaded per charger model. Only active packages are listed.</p></div>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div><label class="lbl" for="start">Starts</label><input id="start" type="datetime-local" class="inp"></div>
+            <div><label class="lbl" for="end">Ends</label><input id="end" type="datetime-local" class="inp"></div>
+          </div>
+          <div>
+            <label class="flex items-center justify-between gap-4 cursor-pointer"><span><span class="block font-semibold">Only update during set hours</span><span class="hint block !mt-0">Chargers are left alone outside this window each day.</span></span><span class="sw"><input id="daily" type="checkbox"><i></i></span></label>
+            <div id="dailyBox" class="hidden mt-3 grid gap-4 sm:grid-cols-2"><div><label class="lbl" for="ds">From</label><input id="ds" type="time" value="22:00" class="inp"></div><div><label class="lbl" for="de">To</label><input id="de" type="time" value="05:00" class="inp"></div><p class="hint sm:col-span-2 !mt-0">Overnight windows work too, for example 22:00 to 05:00.</p></div>
+          </div>
+          <div><label class="lbl" for="tenant">Applies to</label><select id="tenant" class="inp"><option>All tenants (platform-wide)</option><option>Northgrid Energy</option><option>Brightway Charging</option><option>GreenPlug Mobility</option></select><p class="hint">Pick a single tenant to keep the campaign inside their chargers.</p></div>
+        </div>
+        <!-- Step 2 -->
+        <div id="p2" class="hidden space-y-4">
+          <div class="card p-5 md:p-6">
+            <div class="flex flex-wrap items-center justify-between gap-3"><div><h2 class="text-lg font-bold">Which chargers get this update?</h2><p class="text-muted text-[13.5px]">Include rules add chargers. Exclude rules remove them, and always win.</p></div><button id="addRule" class="btn btn-p">Add rule</button></div>
+            <div id="warn" class="hidden mt-4 rounded-lg px-3 py-2 text-[13.5px]" style="background:var(--warn-t);color:var(--warn)"></div>
+            <div id="rules" class="mt-4 space-y-3"></div>
+          </div>
+        </div>
+        <!-- Step 3 -->
+        <div id="p3" class="hidden card p-5 md:p-6">
+          <h2 class="text-lg font-bold">Rollout settings</h2><p class="text-muted text-[13.5px] mb-5">Safe defaults are set. Change them only if you need to.</p>
+          <div class="space-y-5">
+            <label class="flex items-center justify-between gap-4 cursor-pointer"><span><span class="block font-semibold">Skip chargers that are already up to date</span><span class="hint block !mt-0">Chargers on this version or newer are marked done without a download.</span></span><span class="sw"><input type="checkbox" checked><i></i></span></label>
+            <label class="flex items-center justify-between gap-4 cursor-pointer"><span><span class="block font-semibold">Take chargers out of service while updating</span><span class="hint block !mt-0">They return to service automatically, even if the update fails.</span></span><span class="sw"><input type="checkbox"><i></i></span></label>
+            <div class="grid gap-4 sm:grid-cols-2 pt-1">
+              <div><label class="lbl" for="r1">Attempts per charger</label><input id="r1" type="number" class="inp" value="3" min="1" max="10"><p class="hint">Failed updates retry with longer waits each time.</p></div>
+              <div><label class="lbl" for="r2">Test group size</label><input id="r2" type="number" class="inp" value="10" min="1"><p class="hint">This many chargers go first. The rest follow once they pass.</p></div>
+              <div><label class="lbl" for="r3">Updating at the same time</label><input id="r3" type="number" class="inp" value="50" min="1"><p class="hint">Limits download traffic and SIM data use.</p></div>
+              <div><label class="lbl" for="r4">Pause if failures reach (%)</label><input id="r4" type="number" class="inp" value="30" min="1" max="100"><p class="hint">Checked after the test group finishes.</p></div>
+              <div><label class="lbl" for="r5">Wait for relay board (minutes)</label><input id="r5" type="number" class="inp" value="20" min="1"><p class="hint">Time a charger gets to finish the relay board after the main board.</p></div>
+              <div><label class="lbl" for="r6">Mark as stuck after (minutes)</label><input id="r6" type="number" class="inp" value="60" min="10"><p class="hint">No progress for this long counts as a failed attempt.</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- Step 4 -->
+        <div id="p4" class="hidden card p-5 md:p-6"><h2 class="text-lg font-bold">Review and schedule</h2><p class="text-muted text-[13.5px] mb-4">Check the details. You can still go back and change anything.</p><dl id="rev" class="divide-y divide-line"></dl></div>
+        <div class="mt-5 flex items-center justify-between gap-3"><button id="back" class="btn invisible">Back</button><button id="next" class="btn btn-p">Continue</button></div>
+      </section>
+      <aside class="lg:sticky lg:top-20 self-start">
+        <div class="card p-5"><h2 class="font-bold">Summary</h2><div id="sum" class="mt-3 space-y-3 text-[13.5px]"></div></div>
+      </aside>
+    </div>
+  </div>
+</main>
+</div>
+
+<!-- Rule drawer -->
+<div id="dr" role="dialog" aria-modal="true" aria-labelledby="drT" class="fixed inset-0 z-[60]">
+  <div id="drBg" class="absolute inset-0 bg-black/40"></div>
+  <div id="drp" class="absolute right-0 top-0 h-full w-full max-w-md bg-surface border-l border-line flex flex-col" style="padding-top:env(safe-area-inset-top,0px)">
+    <div class="flex items-center justify-between px-5 h-14 border-b border-line"><h2 id="drT" class="font-bold text-lg">Add rule</h2><button id="drX" class="btn btn-s" aria-label="Close">Close</button></div>
+    <div class="flex-1 overflow-y-auto p-5 space-y-5">
+      <div><span class="lbl">What should this rule do?</span><div id="type" class="grid grid-cols-2 gap-2"></div></div>
+      <div><span class="lbl">Match chargers by</span><div id="scopes" class="grid grid-cols-2 gap-2"></div></div>
+      <div id="valBox">
+        <label class="lbl" for="q">Choose values</label>
+        <input id="q" class="inp" placeholder="Search" autocomplete="off">
+        <div class="flex items-center justify-between mt-2 text-[13px]"><span id="cnt" class="text-muted"></span><span><button id="all" class="text-acc font-semibold">Select all shown</button> <span class="text-muted">/</span> <button id="none" class="text-acc font-semibold">Clear</button></span></div>
+        <div id="vals" class="mt-2 max-h-64 overflow-y-auto rounded-lg border border-line"></div>
+        <div id="picked" class="mt-3 flex flex-wrap gap-1.5"></div>
+      </div>
+      <p id="allNote" class="hidden text-muted text-[13.5px]">This rule matches every charger of the selected package model. Pair it with exclude rules to carve out exceptions.</p>
+    </div>
+    <div class="flex justify-end gap-2 p-4 border-t border-line" style="padding-bottom:calc(1rem + env(safe-area-inset-bottom,0px))"><button id="drC" class="btn">Cancel</button><button id="save" class="btn btn-p">Add rule</button></div>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite" class="fixed left-1/2 -translate-x-1/2 z-[70] hidden rounded-lg px-4 py-2.5 font-semibold shadow-lg" style="bottom:calc(1.5rem + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--surface)"></div>
+
+<script>
+$(function(){
+const PK=[
+ {model:'AC-7 Series',main:'2.4.1',relay:'1.3.0',size:'18.2 MB',date:'4 Nov',count:1240},
+ {model:'DC-60 Fast',main:'5.1.0',relay:'',size:'42.6 MB',date:'29 Oct',count:386},
+ {model:'AC-22 Pro',main:'3.0.2',relay:'2.0.1',size:'21.4 MB',date:'12 Oct',count:512}];
+const D={
+ cpo:[['Northgrid Energy','Delhi NCR',412],['Brightway Charging','Maharashtra',268],['GreenPlug Mobility','Karnataka',203],['Metro Volt','Telangana',141],['Sunrise EV','Gujarat',97]],
+ state:[['Delhi','',231],['Uttar Pradesh','',198],['Haryana','',86],['Maharashtra','',225],['Karnataka','',203],['Telangana','',141],['Gujarat','',63]],
+ city:[['New Delhi','Delhi',144],['Noida','Uttar Pradesh',112],['Gurugram','Haryana',86],['Mumbai','Maharashtra',151],['Pune','Maharashtra',74],['Bengaluru','Karnataka',166],['Hyderabad','Telangana',141],['Ahmedabad','Gujarat',63]],
+ station:[['Sector 62 Hub','Noida, 18 chargers',18],['DLF Cyber Hub','Gurugram, 12 chargers',12],['Connaught Place P2','New Delhi, 10 chargers',10],['Andheri East Plaza','Mumbai, 14 chargers',14],['Koramangala Mall','Bengaluru, 16 chargers',16],['HITEC City Square','Hyderabad, 22 chargers',22],['Phoenix Marketcity','Pune, 9 chargers',9]],
+ charger:[['NG-NOI-0412','Sector 62 Hub, v2.3.0',1],['NG-NOI-0413','Sector 62 Hub, v2.3.0',1],['NG-GUR-0207','DLF Cyber Hub, v2.2.4',1],['BW-MUM-0118','Andheri East Plaza, v2.3.2',1],['GP-BLR-0331','Koramangala Mall, v2.1.0',1],['MV-HYD-0054','HITEC City Square, v2.3.0',1]],
+ version:[['2.1.0','Oldest in the fleet',96],['2.2.4','',212],['2.3.0','',388],['2.3.2','',141],['2.4.1','Same as this package',54]]};
+const SC={all:'Every charger',cpo:'CPO',state:'State',city:'City',station:'Station',charger:'Charger',version:'Firmware version'};
+const SENT={cpo:'CPO',state:'State',city:'City',station:'Station',charger:'Charger',version:'Current firmware version'};
+let S={step:1,pkg:0,edit:-1,rules:[{type:'include',scope:'state',vals:['Uttar Pradesh','Delhi']},{type:'exclude',scope:'version',vals:['2.4.1']}]},dr={};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const cnt=r=>r.scope==='all'?PK[S.pkg].count:r.vals.reduce((a,v)=>a+(D[r.scope].find(x=>x[0]===v)||[0,0,0])[2],0);
+const est=()=>{let i=0,e=0;S.rules.forEach(r=>r.type==='include'?i+=cnt(r):e+=cnt(r));return Math.max(0,Math.min(i,PK[S.pkg].count)-e)};
+const hasInc=()=>S.rules.some(r=>r.type==='include');
+const fmt=v=>v?new Date(v).toLocaleString([],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'Not set';
+const loc=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,16);
+const toast=m=>{$('#toast').text(m).fadeIn(120);clearTimeout(toast.t);toast.t=setTimeout(()=>$('#toast').fadeOut(200),2600)};
+const d0=new Date();d0.setDate(d0.getDate()+1);d0.setHours(22,0,0,0);const d1=new Date(d0.getTime()+7*864e5);
+$('#start').val(loc(d0));$('#end').val(loc(d1));
+
+function pkgs(){$('#pkgs').html(PK.map((p,i)=>`<label class="card p-4 flex gap-3 cursor-pointer ${i===S.pkg?'sel':''}"><input type="radio" name="pk" value="${i}" ${i===S.pkg?'checked':''} class="mt-1 accent-[var(--acc)]"><div class="min-w-0 flex-1"><div class="flex justify-between gap-2"><b>${p.model}</b><span class="text-muted text-[13px]">${p.size}</span></div><div class="text-muted text-[13px]">Main ${p.main}${p.relay?', relay '+p.relay:', no relay board'}</div><div class="text-[12.5px] mt-1.5 text-acc">Checksum verified, uploaded ${p.date}. ${p.count.toLocaleString()} chargers on this model.</div></div></label>`).join(''))}
+
+function steps(){$('#steps').html(['Details','Audience','Rollout','Review'].map((t,i)=>{const n=i+1,c=n===S.step?'on':n<S.step?'done':'';return `<button class="step ${c}" data-s="${n}" role="listitem" ${n===S.step?'aria-current="step"':''}><b>${n<S.step?'&#10003;':n}</b><span class="hidden sm:inline">${t}</span></button>`}).join(''))}
+
+function rules(){
+ if(!S.rules.length){$('#rules').html('<div class="rounded-lg border border-dashed border-line p-8 text-center"><p class="font-semibold">No rules yet</p><p class="text-muted text-[13.5px] mt-1">Add an include rule to choose which chargers get the update.</p></div>');}
+ else $('#rules').html(S.rules.map((r,i)=>{const v=r.vals||[],ch=v.slice(0,5).map(x=>`<span class="chip">${esc(x)}</span>`).join('')+(v.length>5?`<span class="chip">+${v.length-5} more</span>`:'');
+  return `<div class="rounded-lg border border-line p-4"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="tag ${r.type==='include'?'tag-i':'tag-e'}">${r.type==='include'?'Include':'Exclude'}</span> <span class="font-semibold ml-1">${r.scope==='all'?'Every charger of this model':SENT[r.scope]+' is any of'}</span></div><div class="flex gap-2 shrink-0"><button class="btn btn-s" data-edit="${i}">Edit</button><button class="btn btn-s" data-del="${i}" aria-label="Remove rule">Remove</button></div></div>${v.length?`<div class="flex flex-wrap gap-1.5 mt-3">${ch}</div>`:''}<p class="text-muted text-[13px] mt-3">Matches about ${cnt(r).toLocaleString()} chargers</p></div>`}).join(''));
+ const only=S.rules.length&&!hasInc();
+ $('#warn').toggleClass('hidden',!only).text(only?'Add at least one include rule. Exclude rules need something to remove from.':'');
+ $('#next').prop('disabled',S.step===2&&!hasInc());
+}
+
+function sum(){const p=PK[S.pkg],e=est();
+ $('#sum').html(`<div><div class="text-muted">Package</div><div class="font-semibold">${p.model}, ${p.main}${p.relay?' / '+p.relay:''}</div></div>
+ <div><div class="text-muted">Window</div><div class="font-semibold">${fmt($('#start').val())} to ${fmt($('#end').val())}</div></div>
+ <div class="pt-3 border-t border-line"><div class="text-muted">Estimated audience</div><div class="text-2xl font-bold">${e.toLocaleString()} <span class="text-[13px] font-medium text-muted">of ${p.count.toLocaleString()} chargers</span></div>
+ <div class="h-1.5 rounded-full mt-2" style="background:var(--line)"><div class="h-full rounded-full" style="width:${Math.min(100,e/p.count*100)}%;background:var(--acc)"></div></div></div>
+ <p class="hint !mt-0">${S.rules.length} rule${S.rules.length===1?'':'s'}. ${e?`About ${Math.round(e*.04)} chargers may wait for another campaign.`:'Add rules to see who is covered.'} The final list is set when the campaign starts.</p>`)}
+
+function review(){const row=(a,b)=>`<div class="flex flex-col sm:flex-row sm:justify-between gap-1 py-3"><dt class="text-muted">${a}</dt><dd class="font-semibold sm:text-right">${b}</dd></div>`,p=PK[S.pkg];
+ $('#rev').html(row('Name',esc($('#title').val()))+row('Package',`${p.model}, main ${p.main}${p.relay?', relay '+p.relay:''}`)+row('Starts',fmt($('#start').val()))+row('Ends',fmt($('#end').val()))+row('Daily hours',$('#daily').is(':checked')?$('#ds').val()+' to '+$('#de').val():'Any time')+row('Applies to',esc($('#tenant').val()))+row('Rules',S.rules.map(r=>`${r.type==='include'?'Include':'Exclude'} ${r.scope==='all'?'every charger':SC[r.scope].toLowerCase()+' ('+r.vals.length+')'}`).join('<br>'))+row('Estimated audience',est().toLocaleString()+' chargers')+row('Attempts, test group, parallel',`${$('#r1').val()}, ${$('#r2').val()}, ${$('#r3').val()}`))}
+
+function go(n){
+ if(n>S.step){if(S.step===1&&!$('#title').val().trim()){$('#title').addClass('err').focus();$('#terr').removeClass('hidden');return}if(S.step===2&&!hasInc())return}
+ S.step=n;[1,2,3,4].forEach(i=>$('#p'+i).toggleClass('hidden',i!==n));
+ $('#back').toggleClass('invisible',n===1);$('#next').text(n===4?'Schedule campaign':'Continue');
+ steps();rules();sum();if(n===4)review();window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* drawer */
+function vals(){const k=dr.scope;$('#valBox').toggleClass('hidden',k==='all');$('#allNote').toggleClass('hidden',k!=='all');
+ if(k!=='all'){const q=$('#q').val().toLowerCase(),L=D[k].filter(x=>(x[0]+' '+x[1]).toLowerCase().includes(q));
+  $('#vals').html(L.length?L.map(x=>`<label class="flex items-center gap-3 px-3 py-2.5 border-b border-line last:border-0 cursor-pointer hover:bg-bg"><input type="checkbox" data-v="${esc(x[0])}" ${dr.vals.has(x[0])?'checked':''} class="accent-[var(--acc)] w-4 h-4"><span class="flex-1 min-w-0"><span class="block font-medium truncate">${esc(x[0])}</span>${x[1]?`<span class="block text-muted text-[12.5px] truncate">${esc(x[1])}</span>`:''}</span><span class="text-muted text-[12.5px]">${k==='charger'?'':x[2]+' chargers'}</span></label>`).join(''):'<p class="p-4 text-muted text-[13.5px]">Nothing matches that search.</p>');
+  $('#cnt').text(dr.vals.size+' selected');
+  $('#picked').html([...dr.vals].map(v=>`<span class="chip">${esc(v)}<button data-x="${esc(v)}" aria-label="Remove ${esc(v)}" class="text-muted">&times;</button></span>`).join(''))}
+ $('#save').prop('disabled',k!=='all'&&!dr.vals.size).text(S.edit>=0?'Save rule':'Add rule');}
+function drawer(){
+ $('#type').html(['include','exclude'].map(t=>`<button data-t="${t}" class="btn ${dr.type===t?'sel':''}" style="${dr.type===t?'border-color:var(--'+(t==='include'?'acc':'exc')+')':''}">${t==='include'?'Include chargers':'Exclude chargers'}</button>`).join(''));
+ $('#scopes').html(Object.keys(SC).map(k=>`<button data-k="${k}" class="btn text-left ${dr.scope===k?'sel':''}" style="${k==='all'?'grid-column:span 2':''}">${SC[k]}</button>`).join(''));vals();}
+function open(i){S.edit=i;const r=i>=0?S.rules[i]:{type:'include',scope:'state',vals:[]};dr={type:r.type,scope:r.scope,vals:new Set(r.vals)};$('#q').val('');$('#drT').text(i>=0?'Edit rule':'Add rule');drawer();$('#dr').addClass('open');setTimeout(()=>$('#q').focus(),240)}
+function close(){$('#dr').removeClass('open')}
+
+/* events */
+$('#pkgs').on('change','input',function(){S.pkg=+this.value;pkgs();sum()});
+$('#daily').on('change',function(){$('#dailyBox').toggleClass('hidden',!this.checked)});
+$('#title').on('input',function(){$(this).removeClass('err');$('#terr').addClass('hidden')});
+$('#start,#end').on('change',sum);
+$('#steps').on('click','.done',function(){go(+$(this).data('s'))});
+$('#next').on('click',function(){if(S.step<4)return go(S.step+1);
+ $('#flow').html(`<div class="card p-10 text-center lg:col-span-2"><div class="mx-auto grid place-items-center w-12 h-12 rounded-full bg-acc-t text-acc text-xl font-bold">&#10003;</div><h2 class="text-xl font-bold mt-4">Campaign scheduled</h2><p class="text-muted mt-1 max-w-md mx-auto">${esc($('#title').val())} will start on ${fmt($('#start').val())}. Chargers are selected from your rules at that time, and you can pause the campaign whenever you need.</p><div class="mt-6 flex justify-center gap-2"><button class="btn" onclick="location.reload()">Create another</button><button class="btn btn-p">View campaign</button></div></div>`);$('#steps').hide();window.scrollTo({top:0});toast('Campaign scheduled')});
+$('#back').on('click',()=>go(S.step-1));
+$('#draft').on('click',()=>toast('Draft saved'));
+$('#addRule').on('click',()=>open(-1));
+$('#rules').on('click','[data-edit]',function(){open(+$(this).data('edit'))}).on('click','[data-del]',function(){S.rules.splice(+$(this).data('del'),1);rules();sum();toast('Rule removed')});
+$('#type').on('click','[data-t]',function(){dr.type=$(this).data('t');drawer()});
+$('#scopes').on('click','[data-k]',function(){dr.scope=$(this).data('k');dr.vals=new Set();$('#q').val('');drawer()});
+$('#q').on('input',vals);
+$('#vals').on('change','input',function(){const v=$(this).data('v');this.checked?dr.vals.add(v):dr.vals.delete(v);vals()});
+$('#picked').on('click','[data-x]',function(){dr.vals.delete($(this).data('x'));vals()});
+$('#all').on('click',()=>{const q=$('#q').val().toLowerCase();D[dr.scope].filter(x=>(x[0]+' '+x[1]).toLowerCase().includes(q)).forEach(x=>dr.vals.add(x[0]));vals()});
+$('#none').on('click',()=>{dr.vals=new Set();vals()});
+$('#save').on('click',()=>{const r={type:dr.type,scope:dr.scope,vals:dr.scope==='all'?[]:[...dr.vals]};S.edit>=0?S.rules[S.edit]=r:S.rules.push(r);close();rules();sum();toast(S.edit>=0?'Rule saved':'Rule added')});
+$('#drX,#drC,#drBg').on('click',close);
+$(document).on('keydown',e=>{if(e.key==='Escape')close()});
+
+pkgs();go(1);
+});
+</script>
+</body>
+</html>
