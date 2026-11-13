@@ -80,8 +80,8 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
   </div>
   <div id="vFiles" class="hidden mx-auto max-w-6xl p-4 md:p-8">
     <div class="flex flex-wrap items-center justify-between gap-3"><div><h1 class="text-2xl font-bold tracking-tight">Firmware files</h1><p class="text-muted mt-1">Every firmware version, organised by charger make and model.</p></div><button class="btn btn-p" id="upBtn">Upload firmware</button></div>
-    <div class="mt-6 flex flex-wrap gap-3"><select id="fMake" class="inp" style="width:auto" aria-label="Make"></select><select id="fModel" class="inp" style="width:auto" aria-label="Model"></select><input id="fQ" class="inp" style="width:220px" placeholder="Search version" aria-label="Search version"></div>
-    <div class="card mt-4 overflow-x-auto"><table class="tbl"><thead><tr><th>Model</th><th>Main</th><th>Relay</th><th>Size</th><th>Storage</th><th>Uploaded</th><th>Campaigns</th><th>Status</th><th></th></tr></thead><tbody id="fRows"></tbody></table></div>
+    <div class="mt-6 flex flex-wrap gap-3"><select id="fMake" class="inp" style="width:auto" aria-label="Make"></select><select id="fModel" class="inp" style="width:auto" aria-label="Model"></select><input id="fQ" class="inp" style="width:220px" placeholder="Search name or version" aria-label="Search name or version"></div>
+    <div class="card mt-4 overflow-x-auto"><table class="tbl"><thead><tr><th>Firmware</th><th>Model</th><th>Main</th><th>Relay</th><th>Checksum</th><th>Uploaded</th><th>Campaigns</th><th>Status</th><th></th></tr></thead><tbody id="fRows"></tbody></table></div>
   </div>
   <div id="vDash" class="hidden mx-auto max-w-6xl p-4 md:p-8">
     <button id="dBack" class="text-muted text-[13.5px] mb-3">&larr; Campaigns</button>
@@ -99,7 +99,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
         <!-- Step 1 -->
         <div id="p1" class="card p-5 md:p-6 space-y-6">
           <div><label class="lbl" for="title">Campaign name</label><input id="title" class="inp" value="AC-7 winter update" autocomplete="off"><p id="terr" class="hint hidden" style="color:var(--exc)">Give the campaign a name so your team can find it later.</p></div>
-          <div><span class="lbl">Firmware package</span><div id="pkgs" class="grid gap-3" role="radiogroup"></div><p class="hint">Packages are uploaded per charger model. Only active packages are listed.</p></div>
+          <div><span class="lbl">Firmware</span><div class="grid gap-4 sm:grid-cols-2"><div><label class="lbl" for="cMake">Charger make</label><select id="cMake" class="inp"></select></div><div><label class="lbl" for="cModel">Charger model</label><select id="cModel" class="inp"></select></div></div><div id="pkgs" class="grid gap-3 mt-4" role="radiogroup" aria-label="Firmware"></div><p class="hint">Only active firmware for the selected make and model is listed. Upload new firmware in Firmware files.</p></div>
           <div class="grid gap-4 sm:grid-cols-2">
             <div><label class="lbl" for="start">Starts</label><input id="start" type="datetime-local" class="inp"></div>
             <div><label class="lbl" for="end">Ends</label><input id="end" type="datetime-local" class="inp"></div>
@@ -178,6 +178,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
   <div class="sl absolute right-0 top-0 h-full w-full max-w-md bg-surface border-l border-line flex flex-col" style="padding-top:env(safe-area-inset-top,0px)">
     <div class="flex items-center justify-between px-5 h-14 border-b border-line"><h2 id="upT" class="font-bold text-lg">Upload firmware</h2><button id="upX" class="btn btn-s">Close</button></div>
     <div class="flex-1 overflow-y-auto p-5 space-y-5">
+      <div><label class="lbl" for="uFwName">Firmware name</label><input id="uFwName" class="inp" placeholder="e.g. AC-7 Winter Release" autocomplete="off"><p class="hint">Shown in the firmware list and when you create a campaign.</p></div>
       <div class="grid grid-cols-2 gap-4"><div><label class="lbl" for="uMake">Make</label><select id="uMake" class="inp"></select></div><div><label class="lbl" for="uModel">Model</label><select id="uModel" class="inp"></select></div></div>
       <div class="grid grid-cols-2 gap-4"><div><label class="lbl" for="uMain">Main board version</label><input id="uMain" class="inp" placeholder="2.4.1" autocomplete="off"></div><div><label class="lbl" for="uRelay">Relay board version</label><input id="uRelay" class="inp" placeholder="Optional" autocomplete="off"></div></div>
       <div><span class="lbl">Firmware source</span><div id="uSrc" class="grid grid-cols-2 gap-2"><button class="btn sel" data-s="file">Upload a file</button><button class="btn" data-s="url">From a URL</button></div></div>
@@ -198,9 +199,16 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 <script>
 $(function(){
 const PK=[
- {model:'AC-7 Series',main:'2.4.1',relay:'1.3.0',size:'18.2 MB',date:'4 Nov',count:1240},
- {model:'DC-60 Fast',main:'5.1.0',relay:'',size:'42.6 MB',date:'29 Oct',count:386},
- {model:'AC-22 Pro',main:'3.0.2',relay:'2.0.1',size:'21.4 MB',date:'12 Oct',count:512}];
+ {name:'AC-7 Winter Release',make:'Voltway',model:'AC-7 Series',main:'2.4.1',relay:'1.3.0',size:'18.2 MB',store:'S3',date:'4 Nov',used:3,status:'Active'},
+ {name:'AC-7 Stable Q3',make:'Voltway',model:'AC-7 Series',main:'2.3.2',relay:'1.2.0',size:'17.9 MB',store:'S3',date:'12 Oct',used:2,status:'Active'},
+ {name:'AC-7 Legacy 2.1',make:'Voltway',model:'AC-7 Series',main:'2.1.0',relay:'1.0.4',size:'17.1 MB',store:'S3',date:'2 Aug',used:1,status:'Archived'},
+ {name:'DC-60 Security Patch',make:'Voltway',model:'DC-60 Fast',main:'5.1.0',relay:'',size:'42.6 MB',store:'S3',date:'29 Oct',used:1,status:'Active'},
+ {name:'DC-60 Baseline',make:'Voltway',model:'DC-60 Fast',main:'5.0.3',relay:'',size:'41.8 MB',store:'S3',date:'9 Sep',used:1,status:'Active'},
+ {name:'AC-22 Relay Fix',make:'Orion Power',model:'AC-22 Pro',main:'3.0.2',relay:'2.0.1',size:'21.4 MB',store:'Server',date:'12 Oct',used:1,status:'Active'},
+ {name:'AC-22 Previous Release',make:'Orion Power',model:'AC-22 Pro',main:'2.9.0',relay:'2.0.0',size:'20.7 MB',store:'Server',date:'18 Jul',used:1,status:'Archived'},
+ {name:'Home Wallbox 1.9',make:'Kinetic',model:'Home-7 Wallbox',main:'1.9.0',relay:'',size:'9.3 MB',store:'S3',date:'8 Nov',used:1,status:'Active'}];
+const MC={'AC-7 Series':1240,'DC-60 Fast':386,'AC-22 Pro':512,'Home-7 Wallbox':610};
+PK.forEach(p=>{p.count=MC[p.model]});
 const D={
  cpo:[['Northgrid Energy','Delhi NCR',412],['Brightway Charging','Maharashtra',268],['GreenPlug Mobility','Karnataka',203],['Metro Volt','Telangana',141],['Sunrise EV','Gujarat',97]],
  state:[['Delhi','',231],['Uttar Pradesh','',198],['Haryana','',86],['Maharashtra','',225],['Karnataka','',203],['Telangana','',141],['Gujarat','',63]],
@@ -224,8 +232,8 @@ const toast=m=>{$('#toast').text(m).fadeIn(120);clearTimeout(toast.t);toast.t=se
 const d0=new Date();d0.setDate(d0.getDate()+1);d0.setHours(22,0,0,0);const d1=new Date(d0.getTime()+7*864e5);
 $('#start').val(loc(d0));$('#end').val(loc(d1));
 
-function pkgs(){$('#pkgs').html(PK.map((p,i)=>`<label class="card p-4 flex gap-3 cursor-pointer ${i===S.pkg?'sel':''}"><input type="radio" name="pk" value="${i}" ${i===S.pkg?'checked':''} class="mt-1 accent-[var(--acc)]"><div class="min-w-0 flex-1"><div class="flex justify-between gap-2"><b>${p.model}</b><span class="text-muted text-[13px]">${p.size}</span></div><div class="text-muted text-[13px]">Main ${p.main}${p.relay?', relay '+p.relay:', no relay board'}</div><div class="text-[12.5px] mt-1.5 text-acc">Checksum verified, uploaded ${p.date}. ${p.count.toLocaleString()} chargers on this model.</div></div></label>`).join(''))}
-
+function pkgs(){const mk=$('#cMake').val(),md=$('#cModel').val(),L=PK.map((p,i)=>[p,i]).filter(([p])=>p.make===mk&&p.model===md&&p.status==='Active');
+ $('#pkgs').html(L.length?L.map(([p,i])=>`<label class="card p-4 flex gap-3 cursor-pointer ${i===S.pkg?'sel':''}"><input type="radio" name="pk" value="${i}" ${i===S.pkg?'checked':''} class="mt-1 accent-[var(--acc)]"><div class="min-w-0 flex-1"><div class="flex justify-between gap-2"><b>${esc(p.name)}</b><span class="text-muted text-[13px]">${p.size}</span></div><div class="text-muted text-[13px]">Main ${p.main}${p.relay?', relay '+p.relay:', no relay board'}</div><div class="text-[12.5px] mt-1.5 text-acc">Checksum verified, uploaded ${p.date}. ${p.count.toLocaleString()} chargers on this model.</div></div></label>`).join(''):'<p class="text-muted text-[13.5px] rounded-lg border border-dashed border-line p-6 text-center">No active firmware for this model yet. Upload one in Firmware files.</p>')}
 function steps(){$('#steps').html(['Details','Audience','Rollout','Review'].map((t,i)=>{const n=i+1,c=n===S.step?'on':n<S.step?'done':'';return `<button class="step ${c}" data-s="${n}" role="listitem" ${n===S.step?'aria-current="step"':''}><b>${n<S.step?'&#10003;':n}</b><span class="hidden sm:inline">${t}</span></button>`}).join(''))}
 
 function rules(){
@@ -237,13 +245,13 @@ function rules(){
  $('#next').prop('disabled',S.step===2&&!hasInc());
 }
 function sum(){const p=PK[S.pkg],e=est();
- $('#sum').html(`<div><div class="text-muted">Package</div><div class="font-semibold">${p.model}, ${p.main}${p.relay?' / '+p.relay:''}</div></div>
+ $('#sum').html(`<div><div class="text-muted">Firmware</div><div class="font-semibold">${esc(p.name)}</div><div class="text-muted text-[13px]">${p.model}, ${p.main}${p.relay?' / '+p.relay:''}</div></div>
  <div><div class="text-muted">For</div><div class="font-semibold">${audT()}</div></div>
  <div><div class="text-muted">Window</div><div class="font-semibold">${fmt($('#start').val())} to ${fmt($('#end').val())}</div></div>
  <div class="pt-3 border-t border-line"><div class="text-muted">Estimated audience</div><div class="text-2xl font-bold">${e.toLocaleString()} <span class="text-[13px] font-medium text-muted">of ${p.count.toLocaleString()} chargers</span></div><div class="bar mt-2"><i style="width:${Math.min(100,e/p.count*100)}%"></i></div></div>
  <p class="hint !mt-0">${S.rules.length} rule${S.rules.length===1?'':'s'}. Chargers onboarded later: ${$('#newch').is(':checked')?'included':'not included'}. ${e?`About ${Math.round(e*.04)} chargers may wait for another campaign.`:'Add rules to see who is covered.'}</p>`)}
 function review(){const row=(a,b)=>`<div class="flex flex-col sm:flex-row sm:justify-between gap-1 py-3"><dt class="text-muted">${a}</dt><dd class="font-semibold sm:text-right">${b}</dd></div>`,p=PK[S.pkg],tg=$('#tg').is(':checked');
- $('#rev').html(row('Name',esc($('#title').val()))+row('Package',`${p.model}, main ${p.main}${p.relay?', relay '+p.relay:''}`)+row('For',audT())+row('Starts',fmt($('#start').val()))+row('Ends',fmt($('#end').val()))+row('Daily hours',$('#daily').is(':checked')?$('#ds').val()+' to '+$('#de').val():'Any time')+row('Rules',S.rules.map(r=>`${r.type==='include'?'Include':'Exclude'}: ${esc(r.name)}`).join('<br>'))+row('Chargers onboarded later',$('#newch').is(':checked')?'Included automatically':'Not included')+row('Estimated audience',est().toLocaleString()+' chargers')+row('Test group',tg?`${$('#r2').val()} chargers, ${$('#trig .sel').length} trigger messages, ${$('#tgNext').val().toLowerCase()}`:'Off')+row('Attempts, at the same time',`${$('#r1').val()}, ${$('#r3').val()}`))}
+ $('#rev').html(row('Name',esc($('#title').val()))+row('Firmware',`${esc(p.name)} (${p.make} ${p.model}, main ${p.main}${p.relay?', relay '+p.relay:''})`)+row('For',audT())+row('Starts',fmt($('#start').val()))+row('Ends',fmt($('#end').val()))+row('Daily hours',$('#daily').is(':checked')?$('#ds').val()+' to '+$('#de').val():'Any time')+row('Rules',S.rules.map(r=>`${r.type==='include'?'Include':'Exclude'}: ${esc(r.name)}`).join('<br>'))+row('Chargers onboarded later',$('#newch').is(':checked')?'Included automatically':'Not included')+row('Estimated audience',est().toLocaleString()+' chargers')+row('Test group',tg?`${$('#r2').val()} chargers, ${$('#trig .sel').length} trigger messages, ${$('#tgNext').val().toLowerCase()}`:'Off')+row('Attempts, at the same time',`${$('#r1').val()}, ${$('#r3').val()}`))}
 
 function go(n){
  if(n>S.step){if(S.step===1&&!$('#title').val().trim()){$('#title').addClass('err').focus();$('#terr').removeClass('hidden');return}if(S.step===2&&!hasInc())return}
@@ -305,22 +313,26 @@ $('#newC').on('click',startNew);
 
 /* firmware files */
 const MM={Voltway:['AC-7 Series','DC-60 Fast'],'Orion Power':['AC-22 Pro'],Kinetic:['Home-7 Wallbox']};
-const FW=[['Voltway','AC-7 Series','2.4.1','1.3.0','18.2 MB','S3','4 Nov',3,'Active'],['Voltway','AC-7 Series','2.3.2','1.2.0','17.9 MB','S3','12 Oct',2,'Active'],['Voltway','AC-7 Series','2.1.0','1.0.4','17.1 MB','S3','2 Aug',1,'Archived'],['Voltway','DC-60 Fast','5.1.0','','42.6 MB','S3','29 Oct',1,'Active'],['Voltway','DC-60 Fast','5.0.3','','41.8 MB','S3','9 Sep',1,'Active'],['Orion Power','AC-22 Pro','3.0.2','2.0.1','21.4 MB','Server','12 Oct',1,'Active'],['Orion Power','AC-22 Pro','2.9.0','2.0.0','20.7 MB','Server','18 Jul',1,'Archived'],['Kinetic','Home-7 Wallbox','1.9.0','','9.3 MB','S3','8 Nov',1,'Active']];
 const opt=(a,all)=>(all?[`<option value="">${all}</option>`]:[]).concat(a.map(x=>`<option>${x}</option>`)).join('');
 const fmodels=()=>{const m=$('#fMake').val();$('#fModel').html(opt(m?MM[m]:[].concat(...Object.values(MM)),'All models'))};
 function files(){const m=$('#fMake').val(),d=$('#fModel').val(),q=$('#fQ').val().toLowerCase();
- $('#fRows').html(FW.filter(f=>(!m||f[0]===m)&&(!d||f[1]===d)&&(f[2]+' '+f[3]).toLowerCase().includes(q)).map(f=>`<tr><td><div class="font-semibold">${f[1]}</div><div class="text-muted text-[12.5px]">${f[0]}</div></td><td>${f[2]}</td><td>${f[3]||'None'}</td><td>${f[4]}<div class="text-acc text-[12.5px]">Checksum verified</div></td><td><span class="chip">${f[5]==='S3'?'S3':'File server'}</span></td><td class="whitespace-nowrap">${f[6]}</td><td>${f[7]}</td><td><span class="pill ${f[8]==='Active'?'p-done':'p-wait'}">${f[8]}</span></td><td class="text-right">${f[8]==='Active'?`<button class="btn btn-s" data-use="${f[1]}">Create campaign</button>`:''}</td></tr>`).join('')||'<tr><td colspan="9" class="text-muted text-center py-8">No firmware matches.</td></tr>')}
+ $('#fRows').html(PK.map((f,i)=>[f,i]).filter(([f])=>(!m||f.make===m)&&(!d||f.model===d)&&(f.name+' '+f.main+' '+f.relay).toLowerCase().includes(q)).map(([f,i])=>`<tr><td><div class="font-semibold">${esc(f.name)}</div><div class="text-muted text-[12.5px]">${f.size}, ${f.store==='S3'?'S3':'File server'}</div></td><td>${f.model}<div class="text-muted text-[12.5px]">${f.make}</div></td><td>${f.main}</td><td>${f.relay||'None'}</td><td class="text-acc">Verified</td><td class="whitespace-nowrap">${f.date}</td><td>${f.used}</td><td><span class="pill ${f.status==='Active'?'p-done':'p-wait'}">${f.status}</span></td><td class="text-right">${f.status==='Active'?`<button class="btn btn-s" data-use="${i}">Create campaign</button>`:''}</td></tr>`).join('')||'<tr><td colspan="9" class="text-muted text-center py-8">No firmware matches.</td></tr>')}
 $('#fMake').html(opt(Object.keys(MM),'All makes')).on('change',()=>{fmodels();files()});$('#fModel,#fQ').on('input change',files);fmodels();files();
-$('#fRows').on('click','[data-use]',function(){const k=PK.findIndex(p=>p.model===$(this).data('use'));if(k>=0){S.pkg=k;pkgs();sum()}startNew()});
+const cm=()=>$('#cModel').html(opt(MM[$('#cMake').val()]));
+$('#cMake').html(opt(Object.keys(MM)));$('#cMake').val(PK[S.pkg].make);cm();$('#cModel').val(PK[S.pkg].model);
+const firstFw=()=>{const i=PK.findIndex(p=>p.make===$('#cMake').val()&&p.model===$('#cModel').val()&&p.status==='Active');if(i>=0)S.pkg=i;pkgs();sum()};
+$('#cMake').on('change',()=>{cm();firstFw()});$('#cModel').on('change',firstFw);
+$('#fRows').on('click','[data-use]',function(){S.pkg=+$(this).data('use');$('#cMake').val(PK[S.pkg].make);cm();$('#cModel').val(PK[S.pkg].model);pkgs();sum();startNew()});
 const um=()=>$('#uModel').html(opt(MM[$('#uMake').val()]));$('#uMake').html(opt(Object.keys(MM))).on('change',um);um();
 $('#upBtn').on('click',()=>{$('#uProg').addClass('hidden');$('#up').addClass('open')});
 $('#upX,#upC,#upBg').on('click',()=>$('#up').removeClass('open'));
 $('#uSrc').on('click','[data-s]',function(){$('#uSrc button').removeClass('sel');$(this).addClass('sel');const f=$(this).data('s')==='file';$('#uFile').toggleClass('hidden',!f);$('#uUrl').toggleClass('hidden',f)});
 $('#uFile').on('click',()=>$('#uPick').click());$('#uPick').on('click',e=>e.stopPropagation()).on('change',function(){const f=this.files[0];if(f)$('#uName').text(f.name+' ('+(f.size/1048576).toFixed(1)+' MB)')});
-$('#uMain').on('input',function(){$(this).removeClass('err')});
-$('#upGo').on('click',function(){if(!$('#uMain').val().trim()){$('#uMain').addClass('err').focus();return}
+$('#uMain,#uFwName').on('input',function(){$(this).removeClass('err')});
+$('#upGo').on('click',function(){const nm=$('#uFwName').val().trim(),mn=$('#uMain').val().trim();
+ if(!nm||!mn){(!nm?$('#uFwName'):$('#uMain')).addClass('err').focus();return}
  const b=$(this).prop('disabled',true);$('#uProg').removeClass('hidden');let p=0;
- const t=setInterval(()=>{p+=16;$('#uBar').css('width',Math.min(p,100)+'%');$('#uMsg').text(p<100?'Uploading the file':'Verifying the SHA-256 checksum');if(p>=100){clearInterval(t);setTimeout(()=>{FW.unshift([$('#uMake').val(),$('#uModel').val(),$('#uMain').val().trim(),$('#uRelay').val().trim(),'12.0 MB','S3','Today',0,'Active']);files();$('#up').removeClass('open');b.prop('disabled',false);$('#uMain,#uRelay').val('');$('#uBar').css('width',0);toast('Firmware uploaded and verified')},600)}},250)});
+ const t=setInterval(()=>{p+=16;$('#uBar').css('width',Math.min(p,100)+'%');$('#uMsg').text(p<100?'Uploading the file':'Verifying the SHA-256 checksum');if(p>=100){clearInterval(t);setTimeout(()=>{const o={name:nm,make:$('#uMake').val(),model:$('#uModel').val(),main:mn,relay:$('#uRelay').val().trim(),size:'12.0 MB',store:'S3',date:'Today',used:0,status:'Active'};o.count=MC[o.model];PK.unshift(o);S.pkg++;files();pkgs();$('#up').removeClass('open');b.prop('disabled',false);$('#uMain,#uRelay,#uFwName').val('');$('#uBar').css('width',0);toast('Firmware uploaded and verified')},600)}},250)});
 
 /* live dashboard */
 const CH=[['NG-NOI-0412','Sector 62 Hub','completed',1],['NG-NOI-0413','Sector 62 Hub','completed',1],['NG-GUR-0207','DLF Cyber Hub','installing',1],['NG-DEL-0101','Connaught Place P2','relay_pending',1],['NG-DEL-0102','Connaught Place P2','downloading',2],['NG-NOI-0420','Sector 18 Mall','pending',0],['BW-MUM-0118','Andheri East Plaza','failed',3],['BW-MUM-0119','Andheri East Plaza','completed',2],['GP-BLR-0331','Koramangala Mall','initiated',1],['GP-BLR-0332','Koramangala Mall','pending',0],['MV-HYD-0054','HITEC City Square','completed',1],['MV-HYD-0055','HITEC City Square','pending',1],['NG-GUR-0208','DLF Cyber Hub','pending',0],['SR-AHM-0021','SG Highway Park','completed',1],['SR-AHM-0022','SG Highway Park','installing',2],['BW-PUN-0090','Phoenix Marketcity','pending',0],['NG-DEL-0103','Connaught Place P2','failed',3],['NG-NOI-0421','Sector 18 Mall','downloading',1],['GP-BLR-0333','Koramangala Mall','completed',1],['MV-HYD-0056','HITEC City Square','pending',0]];
@@ -368,7 +380,7 @@ function view(v){['Camps','Files','New','Dash'].forEach(x=>$('#v'+x).toggleClass
  $('[data-v]').each(function(){if($(this).is('.tab,.nav'))$(this).toggleClass('on',$(this).data('v')===(v==='Files'?'Files':'Camps'))});
  $('#draft').toggle(v==='New');const L={Camps:'Campaigns',Files:'Firmware files',New:'Campaigns / New campaign',Dash:'Campaigns / '+$('#dT').text()};
  $('#crumb').html('Firmware / <span class="text-ink font-medium">'+esc(L[v])+'</span>');clearInterval(tk);if(v==='Dash')tk=setInterval(tick,3000);window.scrollTo(0,0)}
-$(document).on('click','[data-v]',function(e){e.preventDefault();view($(this).data('v'))});
+$(document).on('click','.tab[data-v],.nav[data-v]',function(e){e.preventDefault();view($(this).data('v'))});
 pkgs();go(1);view(location.hash==='#new'?'New':'Camps');
 });
 </script>
