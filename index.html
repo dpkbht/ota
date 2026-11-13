@@ -47,6 +47,16 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 #drp{transform:translateX(100%);transition:transform .22s ease}#dr.open #drp{transform:none}
 #dr{visibility:hidden}#dr.open{visibility:visible}
 @media (prefers-reduced-motion:reduce){#drp,.sw i,.sw i:after{transition:none}}
+.pill{display:inline-block;padding:1px 10px;border-radius:999px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.p-done{color:var(--acc);background:var(--acc-t)}.p-fail{color:var(--exc);background:var(--exc-t)}.p-run{color:var(--warn);background:var(--warn-t)}.p-wait{color:var(--muted);background:var(--bg);border:1px solid var(--line)}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}.tbl th{text-align:left;font-weight:600;color:var(--muted);font-size:13px;padding:10px 14px;border-bottom:1px solid var(--line);white-space:nowrap}.tbl td{padding:12px 14px;border-bottom:1px solid var(--line)}.tbl tr:last-child td{border:0}.tbl tr.go{cursor:pointer}.tbl tr.go:hover{background:var(--bg)}
+.tab{padding:12px 2px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;background:none;cursor:pointer}.tab.on{color:var(--ink);border-color:var(--acc)}
+.bar{height:6px;border-radius:99px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:var(--acc);transition:width .4s}
+.live{width:8px;height:8px;border-radius:50%;background:var(--acc);display:inline-block;animation:pu 1.6s infinite}@keyframes pu{50%{opacity:.35}}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--line);flex:none;margin-top:6px}
+.drop{border:1.5px dashed var(--line);border-radius:10px;padding:22px;text-align:center;cursor:pointer}.drop:hover{border-color:var(--acc);background:var(--acc-t)}
+.ov{visibility:hidden}.ov.open{visibility:visible}.sl{transform:translateX(100%);transition:transform .22s ease}.ov.open .sl{transform:none}
+@media (prefers-reduced-motion:reduce){.live{animation:none}.sl,.bar i{transition:none}}
 </style>
 </head>
 <body>
@@ -55,15 +65,32 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
   <div class="px-2 py-3 text-lg font-bold">ChargeCMS</div>
   <a class="nav" href="#">Dashboard</a><a class="nav" href="#">Chargers</a><a class="nav" href="#">Stations</a><a class="nav" href="#">Sessions</a>
   <div class="px-2.5 pt-5 pb-1 text-[13px] text-muted">Firmware</div>
-  <a class="nav" href="#">Packages</a><a class="nav on" href="#">Campaigns</a>
+  <a class="nav" href="#" data-v="Files">Firmware files</a><a class="nav on" href="#" data-v="Camps">Campaigns</a>
   <div class="mt-auto"><a class="nav" href="#">Settings</a></div>
 </aside>
 <main class="flex-1 min-w-0">
   <header class="sticky z-40 flex items-center justify-between gap-3 border-b border-line bg-surface px-4 md:px-8 h-14" style="top:env(safe-area-inset-top,0px)">
-    <nav class="text-muted text-[13.5px] truncate" aria-label="Breadcrumb">Firmware / Campaigns / <span class="text-ink font-medium">New campaign</span></nav>
+    <nav id="crumb" class="text-muted text-[13.5px] truncate" aria-label="Breadcrumb"></nav>
     <div class="flex items-center gap-2"><button class="btn btn-s" id="draft">Save draft</button><span class="grid place-items-center w-8 h-8 rounded-full bg-acc-t text-acc font-bold text-[13px]">DK</span></div>
   </header>
-  <div class="mx-auto max-w-6xl p-4 md:p-8">
+  <div class="bg-surface border-b border-line px-4 md:px-8 flex gap-6" id="mt"><button class="tab on" data-v="Camps">Campaigns</button><button class="tab" data-v="Files">Firmware files</button></div>
+  <div id="vCamps" class="mx-auto max-w-6xl p-4 md:p-8">
+    <div class="flex flex-wrap items-center justify-between gap-3"><div><h1 class="text-2xl font-bold tracking-tight">Firmware campaigns</h1><p class="text-muted mt-1">Roll firmware out to chargers and follow every update live.</p></div><button class="btn btn-p" id="newC">New campaign</button></div>
+    <div class="card mt-6 overflow-x-auto"><table class="tbl"><thead><tr><th>Campaign</th><th>Package</th><th>For</th><th>Window</th><th style="min-width:180px">Progress</th><th>Status</th></tr></thead><tbody id="campRows"></tbody></table></div>
+  </div>
+  <div id="vFiles" class="hidden mx-auto max-w-6xl p-4 md:p-8">
+    <div class="flex flex-wrap items-center justify-between gap-3"><div><h1 class="text-2xl font-bold tracking-tight">Firmware files</h1><p class="text-muted mt-1">Every firmware version, organised by charger make and model.</p></div><button class="btn btn-p" id="upBtn">Upload firmware</button></div>
+    <div class="mt-6 flex flex-wrap gap-3"><select id="fMake" class="inp" style="width:auto" aria-label="Make"></select><select id="fModel" class="inp" style="width:auto" aria-label="Model"></select><input id="fQ" class="inp" style="width:220px" placeholder="Search version" aria-label="Search version"></div>
+    <div class="card mt-4 overflow-x-auto"><table class="tbl"><thead><tr><th>Model</th><th>Main</th><th>Relay</th><th>Size</th><th>Storage</th><th>Uploaded</th><th>Campaigns</th><th>Status</th><th></th></tr></thead><tbody id="fRows"></tbody></table></div>
+  </div>
+  <div id="vDash" class="hidden mx-auto max-w-6xl p-4 md:p-8">
+    <button id="dBack" class="text-muted text-[13.5px] mb-3">&larr; Campaigns</button>
+    <div class="flex flex-wrap items-start justify-between gap-3"><div><div class="flex flex-wrap items-center gap-3"><h1 id="dT" class="text-2xl font-bold tracking-tight"></h1><span class="pill p-run"><span class="live mr-1.5"></span>Live</span></div><p id="dS" class="text-muted mt-1"></p></div><div class="flex gap-2"><button class="btn btn-s" id="dPause">Pause</button><button class="btn btn-s" id="dExp">Export report</button></div></div>
+    <div id="kpi" class="mt-6 grid grid-cols-2 md:grid-cols-5 gap-3"></div>
+    <div class="card p-4 mt-3"><div class="bar"><i id="dBar" style="width:0"></i></div><div id="phase" class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-[13.5px]"></div></div>
+    <div class="card mt-6"><div class="flex flex-wrap items-center justify-between gap-3 p-4 border-b border-line"><div id="dF" class="flex flex-wrap gap-2"></div><input id="dQ" class="inp" style="width:220px" placeholder="Search charger" aria-label="Search charger"></div><div class="overflow-x-auto"><table class="tbl"><thead><tr><th>Charger</th><th>Station</th><th>Status</th><th>Attempts</th><th>Last event</th></tr></thead><tbody id="dRows"></tbody></table></div><p class="hint px-4 pb-3">Showing 20 of the most recent chargers. Select one to see every command, retry and result.</p></div>
+  </div>
+  <div id="vNew" class="hidden mx-auto max-w-6xl p-4 md:p-8">
     <h1 class="text-2xl font-bold tracking-tight">New firmware campaign</h1>
     <p class="text-muted mt-1">Choose a package, pick the chargers that should get it, and schedule the rollout.</p>
     <div id="steps" class="mt-6 flex gap-4" role="list"></div>
@@ -81,7 +108,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
             <label class="flex items-center justify-between gap-4 cursor-pointer"><span><span class="block font-semibold">Only update during set hours</span><span class="hint block !mt-0">Chargers are left alone outside this window each day.</span></span><span class="sw"><input id="daily" type="checkbox"><i></i></span></label>
             <div id="dailyBox" class="hidden mt-3 grid gap-4 sm:grid-cols-2"><div><label class="lbl" for="ds">From</label><input id="ds" type="time" value="22:00" class="inp"></div><div><label class="lbl" for="de">To</label><input id="de" type="time" value="05:00" class="inp"></div><p class="hint sm:col-span-2 !mt-0">Overnight windows work too, for example 22:00 to 05:00.</p></div>
           </div>
-          <div><label class="lbl" for="tenant">Applies to</label><select id="tenant" class="inp"><option>All tenants (platform-wide)</option><option>Northgrid Energy</option><option>Brightway Charging</option><option>GreenPlug Mobility</option></select><p class="hint">Pick a single tenant to keep the campaign inside their chargers.</p></div>
+          <div><span class="lbl">Who is this campaign for?</span><div id="aud" class="grid gap-3 sm:grid-cols-2"><label class="card p-4 flex gap-3 cursor-pointer sel"><input type="checkbox" value="public" checked class="mt-1 accent-[var(--acc)]"><span><b class="block">Public chargers</b><span class="text-muted text-[13px]">Stations open to every driver</span></span></label><label class="card p-4 flex gap-3 cursor-pointer"><input type="checkbox" value="home" class="mt-1 accent-[var(--acc)]"><span><b class="block">Home chargers</b><span class="text-muted text-[13px]">Wallboxes installed at customers&rsquo; homes</span></span></label></div><p class="hint">Pick one or both. The rules in the next step narrow it down further.</p></div>
         </div>
         <!-- Step 2 -->
         <div id="p2" class="hidden space-y-4">
@@ -89,6 +116,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
             <div class="flex flex-wrap items-center justify-between gap-3"><div><h2 class="text-lg font-bold">Which chargers get this update?</h2><p class="text-muted text-[13.5px]">Include rules add chargers. Exclude rules remove them, and always win.</p></div><button id="addRule" class="btn btn-p">Add rule</button></div>
             <div id="warn" class="hidden mt-4 rounded-lg px-3 py-2 text-[13.5px]" style="background:var(--warn-t);color:var(--warn)"></div>
             <div id="rules" class="mt-4 space-y-3"></div>
+            <label class="flex items-center justify-between gap-4 cursor-pointer mt-5 pt-5 border-t border-line"><span><span class="block font-semibold">Include chargers onboarded later</span><span class="hint block !mt-0">Chargers that match these rules and join the network after this campaign was created are added automatically while it runs.</span></span><span class="sw"><input id="newch" type="checkbox" checked><i></i></span></label>
           </div>
         </div>
         <!-- Step 3 -->
@@ -97,9 +125,15 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
           <div class="space-y-5">
             <label class="flex items-center justify-between gap-4 cursor-pointer"><span><span class="block font-semibold">Skip chargers that are already up to date</span><span class="hint block !mt-0">Chargers on this version or newer are marked done without a download.</span></span><span class="sw"><input type="checkbox" checked><i></i></span></label>
             <label class="flex items-center justify-between gap-4 cursor-pointer"><span><span class="block font-semibold">Take chargers out of service while updating</span><span class="hint block !mt-0">They return to service automatically, even if the update fails.</span></span><span class="sw"><input type="checkbox"><i></i></span></label>
+            <div class="rounded-lg border border-line p-4 space-y-4 mb-5">
+              <label class="flex items-center justify-between gap-4 cursor-pointer"><span><span class="block font-semibold">Test on a small group first</span><span class="hint block !mt-0">Optional. Update a few chargers, check that they behave, then roll out to the rest.</span></span><span class="sw"><input id="tg" type="checkbox" checked><i></i></span></label>
+              <div id="tgBox" class="space-y-4">
+                <div class="grid gap-4 sm:grid-cols-2"><div><label class="lbl" for="r2">Test group size</label><input id="r2" type="number" class="inp" value="10" min="1"></div><div><label class="lbl" for="tgNext">After the test</label><select id="tgNext" class="inp"><option>Continue automatically</option><option>Wait for my approval</option></select></div></div>
+                <div><span class="lbl">Trigger messages to send after the update</span><div id="trig" class="flex flex-wrap gap-2"></div><p class="hint">The group passes when every test charger answers all selected messages.</p></div>
+              </div></div>
             <div class="grid gap-4 sm:grid-cols-2 pt-1">
               <div><label class="lbl" for="r1">Attempts per charger</label><input id="r1" type="number" class="inp" value="3" min="1" max="10"><p class="hint">Failed updates retry with longer waits each time.</p></div>
-              <div><label class="lbl" for="r2">Test group size</label><input id="r2" type="number" class="inp" value="10" min="1"><p class="hint">This many chargers go first. The rest follow once they pass.</p></div>
+              
               <div><label class="lbl" for="r3">Updating at the same time</label><input id="r3" type="number" class="inp" value="50" min="1"><p class="hint">Limits download traffic and SIM data use.</p></div>
               <div><label class="lbl" for="r4">Pause if failures reach (%)</label><input id="r4" type="number" class="inp" value="30" min="1" max="100"><p class="hint">Checked after the test group finishes.</p></div>
               <div><label class="lbl" for="r5">Wait for relay board (minutes)</label><input id="r5" type="number" class="inp" value="20" min="1"><p class="hint">Time a charger gets to finish the relay board after the main board.</p></div>
@@ -125,8 +159,9 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
   <div id="drp" class="absolute right-0 top-0 h-full w-full max-w-md bg-surface border-l border-line flex flex-col" style="padding-top:env(safe-area-inset-top,0px)">
     <div class="flex items-center justify-between px-5 h-14 border-b border-line"><h2 id="drT" class="font-bold text-lg">Add rule</h2><button id="drX" class="btn btn-s" aria-label="Close">Close</button></div>
     <div class="flex-1 overflow-y-auto p-5 space-y-5">
+      <div><label class="lbl" for="rname">Rule name</label><input id="rname" class="inp" placeholder="e.g. EastWing chargers in Delhi" autocomplete="off"></div>
       <div><span class="lbl">What should this rule do?</span><div id="type" class="grid grid-cols-2 gap-2"></div></div>
-      <div><span class="lbl">Match chargers by</span><div id="scopes" class="grid grid-cols-2 gap-2"></div></div>
+      <div><span class="lbl">Match chargers by</span><label class="flex items-center gap-2 mb-3 cursor-pointer"><input id="allc" type="checkbox" class="accent-[var(--acc)] w-4 h-4"><span>Every charger of this model</span></label><div id="tabs" class="flex flex-wrap gap-2"></div><p class="hint">A charger must match every criterion you pick. Within one criterion, any value matches.</p></div>
       <div id="valBox">
         <label class="lbl" for="q">Choose values</label>
         <input id="q" class="inp" placeholder="Search" autocomplete="off">
@@ -139,6 +174,25 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
     <div class="flex justify-end gap-2 p-4 border-t border-line" style="padding-bottom:calc(1rem + env(safe-area-inset-bottom,0px))"><button id="drC" class="btn">Cancel</button><button id="save" class="btn btn-p">Add rule</button></div>
   </div>
 </div>
+<div id="up" class="ov fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-labelledby="upT"><div id="upBg" class="absolute inset-0 bg-black/40"></div>
+  <div class="sl absolute right-0 top-0 h-full w-full max-w-md bg-surface border-l border-line flex flex-col" style="padding-top:env(safe-area-inset-top,0px)">
+    <div class="flex items-center justify-between px-5 h-14 border-b border-line"><h2 id="upT" class="font-bold text-lg">Upload firmware</h2><button id="upX" class="btn btn-s">Close</button></div>
+    <div class="flex-1 overflow-y-auto p-5 space-y-5">
+      <div class="grid grid-cols-2 gap-4"><div><label class="lbl" for="uMake">Make</label><select id="uMake" class="inp"></select></div><div><label class="lbl" for="uModel">Model</label><select id="uModel" class="inp"></select></div></div>
+      <div class="grid grid-cols-2 gap-4"><div><label class="lbl" for="uMain">Main board version</label><input id="uMain" class="inp" placeholder="2.4.1" autocomplete="off"></div><div><label class="lbl" for="uRelay">Relay board version</label><input id="uRelay" class="inp" placeholder="Optional" autocomplete="off"></div></div>
+      <div><span class="lbl">Firmware source</span><div id="uSrc" class="grid grid-cols-2 gap-2"><button class="btn sel" data-s="file">Upload a file</button><button class="btn" data-s="url">From a URL</button></div></div>
+      <div id="uFile" class="drop"><p class="font-semibold" id="uName">Drop a firmware file or click to browse</p><p class="hint">.bin, .hex or .zip, up to 200 MB</p><input id="uPick" type="file" class="hidden"></div>
+      <div id="uUrl" class="hidden"><label class="lbl" for="uUrlI">Download URL</label><input id="uUrlI" class="inp" placeholder="https://"><p class="hint">The file is fetched once and stored with your other firmware.</p></div>
+      <div><label class="lbl" for="uNotes">Release notes</label><textarea id="uNotes" class="inp py-2" style="height:80px" placeholder="Optional"></textarea></div>
+      <div id="uProg" class="hidden"><div class="bar"><i id="uBar" style="width:0"></i></div><p id="uMsg" class="hint"></p></div>
+    </div>
+    <div class="flex justify-end gap-2 p-4 border-t border-line" style="padding-bottom:calc(1rem + env(safe-area-inset-bottom,0px))"><button id="upC" class="btn">Cancel</button><button id="upGo" class="btn btn-p">Upload firmware</button></div>
+  </div></div>
+<div id="dd" class="ov fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-labelledby="ddT"><div id="ddBg" class="absolute inset-0 bg-black/40"></div>
+  <div class="sl absolute right-0 top-0 h-full w-full max-w-md bg-surface border-l border-line flex flex-col" style="padding-top:env(safe-area-inset-top,0px)">
+    <div class="flex items-center justify-between px-5 h-14 border-b border-line"><div><h2 id="ddT" class="font-bold text-lg leading-tight"></h2><p id="ddS" class="text-muted text-[12.5px]"></p></div><button id="ddX" class="btn btn-s">Close</button></div>
+    <div class="flex-1 overflow-y-auto p-5"><div id="ddInfo" class="flex flex-wrap gap-2 mb-5"></div><ol id="ddL" class="space-y-4"></ol></div>
+  </div></div>
 <div id="toast" role="status" aria-live="polite" class="fixed left-1/2 -translate-x-1/2 z-[70] hidden rounded-lg px-4 py-2.5 font-semibold shadow-lg" style="bottom:calc(1.5rem + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--surface)"></div>
 
 <script>
@@ -154,12 +208,15 @@ const D={
  station:[['Sector 62 Hub','Noida, 18 chargers',18],['DLF Cyber Hub','Gurugram, 12 chargers',12],['Connaught Place P2','New Delhi, 10 chargers',10],['Andheri East Plaza','Mumbai, 14 chargers',14],['Koramangala Mall','Bengaluru, 16 chargers',16],['HITEC City Square','Hyderabad, 22 chargers',22],['Phoenix Marketcity','Pune, 9 chargers',9]],
  charger:[['NG-NOI-0412','Sector 62 Hub, v2.3.0',1],['NG-NOI-0413','Sector 62 Hub, v2.3.0',1],['NG-GUR-0207','DLF Cyber Hub, v2.2.4',1],['BW-MUM-0118','Andheri East Plaza, v2.3.2',1],['GP-BLR-0331','Koramangala Mall, v2.1.0',1],['MV-HYD-0054','HITEC City Square, v2.3.0',1]],
  version:[['2.1.0','Oldest in the fleet',96],['2.2.4','',212],['2.3.0','',388],['2.3.2','',141],['2.4.1','Same as this package',54]]};
-const SC={all:'Every charger',cpo:'CPO',state:'State',city:'City',station:'Station',charger:'Charger',version:'Firmware version'};
-const SENT={cpo:'CPO',state:'State',city:'City',station:'Station',charger:'Charger',version:'Current firmware version'};
-let S={step:1,pkg:0,edit:-1,rules:[{type:'include',scope:'state',vals:['Uttar Pradesh','Delhi']},{type:'exclude',scope:'version',vals:['2.4.1']}]},dr={};
+let S={step:1,pkg:0,edit:-1,rules:[{name:'Delhi NCR chargers',type:'include',all:false,crit:{cpo:['Northgrid Energy'],state:['Delhi','Uttar Pradesh']}},{name:'Already on the latest version',type:'exclude',all:false,crit:{version:['2.4.1']}}]},dr={};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const cnt=r=>r.scope==='all'?PK[S.pkg].count:r.vals.reduce((a,v)=>a+(D[r.scope].find(x=>x[0]===v)||[0,0,0])[2],0);
-const est=()=>{let i=0,e=0;S.rules.forEach(r=>r.type==='include'?i+=cnt(r):e+=cnt(r));return Math.max(0,Math.min(i,PK[S.pkg].count)-e)};
+const DIM=['cpo','state','city','station','charger','version'],SCL={cpo:'CPO',state:'State',city:'City',station:'Station',charger:'Charger',version:'Firmware version'};
+const dims=r=>DIM.filter(k=>(r.crit[k]||[]).length);
+const cnt=r=>{const m=PK[S.pkg].count;if(r.all)return m;const n=dims(r).map(k=>Math.min(m,r.crit[k].reduce((a,v)=>a+(D[k].find(x=>x[0]===v)||[0,0,0])[2],0)));return n.length>1?Math.round(Math.min(...n)*.55):(n[0]||0)};
+const ch=v=>$('#aud input[value='+v+']').is(':checked');
+const audF=()=>ch('public')&&ch('home')?1:ch('public')?.74:.26;
+const audT=()=>ch('public')&&ch('home')?'Public and home chargers':ch('public')?'Public chargers':'Home chargers';
+const est=()=>{let i=0,e=0;S.rules.forEach(r=>r.type==='include'?i+=cnt(r):e+=cnt(r));return Math.round(Math.max(0,Math.min(i,PK[S.pkg].count)-e)*audF())};
 const hasInc=()=>S.rules.some(r=>r.type==='include');
 const fmt=v=>v?new Date(v).toLocaleString([],{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'Not set';
 const loc=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,16);
@@ -172,23 +229,21 @@ function pkgs(){$('#pkgs').html(PK.map((p,i)=>`<label class="card p-4 flex gap-3
 function steps(){$('#steps').html(['Details','Audience','Rollout','Review'].map((t,i)=>{const n=i+1,c=n===S.step?'on':n<S.step?'done':'';return `<button class="step ${c}" data-s="${n}" role="listitem" ${n===S.step?'aria-current="step"':''}><b>${n<S.step?'&#10003;':n}</b><span class="hidden sm:inline">${t}</span></button>`}).join(''))}
 
 function rules(){
- if(!S.rules.length){$('#rules').html('<div class="rounded-lg border border-dashed border-line p-8 text-center"><p class="font-semibold">No rules yet</p><p class="text-muted text-[13.5px] mt-1">Add an include rule to choose which chargers get the update.</p></div>');}
- else $('#rules').html(S.rules.map((r,i)=>{const v=r.vals||[],ch=v.slice(0,5).map(x=>`<span class="chip">${esc(x)}</span>`).join('')+(v.length>5?`<span class="chip">+${v.length-5} more</span>`:'');
-  return `<div class="rounded-lg border border-line p-4"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="tag ${r.type==='include'?'tag-i':'tag-e'}">${r.type==='include'?'Include':'Exclude'}</span> <span class="font-semibold ml-1">${r.scope==='all'?'Every charger of this model':SENT[r.scope]+' is any of'}</span></div><div class="flex gap-2 shrink-0"><button class="btn btn-s" data-edit="${i}">Edit</button><button class="btn btn-s" data-del="${i}" aria-label="Remove rule">Remove</button></div></div>${v.length?`<div class="flex flex-wrap gap-1.5 mt-3">${ch}</div>`:''}<p class="text-muted text-[13px] mt-3">Matches about ${cnt(r).toLocaleString()} chargers</p></div>`}).join(''));
+ if(!S.rules.length)$('#rules').html('<div class="rounded-lg border border-dashed border-line p-8 text-center"><p class="font-semibold">No rules yet</p><p class="text-muted text-[13.5px] mt-1">Add an include rule to choose which chargers get the update.</p></div>');
+ else $('#rules').html(S.rules.map((r,i)=>{const ds=dims(r),crit=r.all?'<span class="chip">Every charger of this model</span>':ds.map(k=>`<div class="flex flex-wrap items-center gap-1.5"><span class="text-muted text-[13px] shrink-0" style="width:112px">${SCL[k]}</span>${r.crit[k].slice(0,4).map(x=>`<span class="chip">${esc(x)}</span>`).join('')}${r.crit[k].length>4?`<span class="chip">+${r.crit[k].length-4} more</span>`:''}</div>`).join('');
+  return `<div class="rounded-lg border border-line p-4"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><span class="tag ${r.type==='include'?'tag-i':'tag-e'}">${r.type==='include'?'Include':'Exclude'}</span> <span class="font-semibold ml-1">${esc(r.name)}</span></div><div class="flex gap-2 shrink-0"><button class="btn btn-s" data-edit="${i}">Edit</button><button class="btn btn-s" data-del="${i}" aria-label="Remove rule">Remove</button></div></div><div class="mt-3 space-y-2">${crit}</div><p class="text-muted text-[13px] mt-3">${ds.length>1&&!r.all?'Chargers must match all criteria. ':''}About ${cnt(r).toLocaleString()} chargers</p></div>`}).join(''));
  const only=S.rules.length&&!hasInc();
  $('#warn').toggleClass('hidden',!only).text(only?'Add at least one include rule. Exclude rules need something to remove from.':'');
  $('#next').prop('disabled',S.step===2&&!hasInc());
 }
-
 function sum(){const p=PK[S.pkg],e=est();
  $('#sum').html(`<div><div class="text-muted">Package</div><div class="font-semibold">${p.model}, ${p.main}${p.relay?' / '+p.relay:''}</div></div>
+ <div><div class="text-muted">For</div><div class="font-semibold">${audT()}</div></div>
  <div><div class="text-muted">Window</div><div class="font-semibold">${fmt($('#start').val())} to ${fmt($('#end').val())}</div></div>
- <div class="pt-3 border-t border-line"><div class="text-muted">Estimated audience</div><div class="text-2xl font-bold">${e.toLocaleString()} <span class="text-[13px] font-medium text-muted">of ${p.count.toLocaleString()} chargers</span></div>
- <div class="h-1.5 rounded-full mt-2" style="background:var(--line)"><div class="h-full rounded-full" style="width:${Math.min(100,e/p.count*100)}%;background:var(--acc)"></div></div></div>
- <p class="hint !mt-0">${S.rules.length} rule${S.rules.length===1?'':'s'}. ${e?`About ${Math.round(e*.04)} chargers may wait for another campaign.`:'Add rules to see who is covered.'} The final list is set when the campaign starts.</p>`)}
-
-function review(){const row=(a,b)=>`<div class="flex flex-col sm:flex-row sm:justify-between gap-1 py-3"><dt class="text-muted">${a}</dt><dd class="font-semibold sm:text-right">${b}</dd></div>`,p=PK[S.pkg];
- $('#rev').html(row('Name',esc($('#title').val()))+row('Package',`${p.model}, main ${p.main}${p.relay?', relay '+p.relay:''}`)+row('Starts',fmt($('#start').val()))+row('Ends',fmt($('#end').val()))+row('Daily hours',$('#daily').is(':checked')?$('#ds').val()+' to '+$('#de').val():'Any time')+row('Applies to',esc($('#tenant').val()))+row('Rules',S.rules.map(r=>`${r.type==='include'?'Include':'Exclude'} ${r.scope==='all'?'every charger':SC[r.scope].toLowerCase()+' ('+r.vals.length+')'}`).join('<br>'))+row('Estimated audience',est().toLocaleString()+' chargers')+row('Attempts, test group, parallel',`${$('#r1').val()}, ${$('#r2').val()}, ${$('#r3').val()}`))}
+ <div class="pt-3 border-t border-line"><div class="text-muted">Estimated audience</div><div class="text-2xl font-bold">${e.toLocaleString()} <span class="text-[13px] font-medium text-muted">of ${p.count.toLocaleString()} chargers</span></div><div class="bar mt-2"><i style="width:${Math.min(100,e/p.count*100)}%"></i></div></div>
+ <p class="hint !mt-0">${S.rules.length} rule${S.rules.length===1?'':'s'}. Chargers onboarded later: ${$('#newch').is(':checked')?'included':'not included'}. ${e?`About ${Math.round(e*.04)} chargers may wait for another campaign.`:'Add rules to see who is covered.'}</p>`)}
+function review(){const row=(a,b)=>`<div class="flex flex-col sm:flex-row sm:justify-between gap-1 py-3"><dt class="text-muted">${a}</dt><dd class="font-semibold sm:text-right">${b}</dd></div>`,p=PK[S.pkg],tg=$('#tg').is(':checked');
+ $('#rev').html(row('Name',esc($('#title').val()))+row('Package',`${p.model}, main ${p.main}${p.relay?', relay '+p.relay:''}`)+row('For',audT())+row('Starts',fmt($('#start').val()))+row('Ends',fmt($('#end').val()))+row('Daily hours',$('#daily').is(':checked')?$('#ds').val()+' to '+$('#de').val():'Any time')+row('Rules',S.rules.map(r=>`${r.type==='include'?'Include':'Exclude'}: ${esc(r.name)}`).join('<br>'))+row('Chargers onboarded later',$('#newch').is(':checked')?'Included automatically':'Not included')+row('Estimated audience',est().toLocaleString()+' chargers')+row('Test group',tg?`${$('#r2').val()} chargers, ${$('#trig .sel').length} trigger messages, ${$('#tgNext').val().toLowerCase()}`:'Off')+row('Attempts, at the same time',`${$('#r1').val()}, ${$('#r3').val()}`))}
 
 function go(n){
  if(n>S.step){if(S.step===1&&!$('#title').val().trim()){$('#title').addClass('err').focus();$('#terr').removeClass('hidden');return}if(S.step===2&&!hasInc())return}
@@ -198,16 +253,17 @@ function go(n){
 }
 
 /* drawer */
-function vals(){const k=dr.scope;$('#valBox').toggleClass('hidden',k==='all');$('#allNote').toggleClass('hidden',k!=='all');
- if(k!=='all'){const q=$('#q').val().toLowerCase(),L=D[k].filter(x=>(x[0]+' '+x[1]).toLowerCase().includes(q));
-  $('#vals').html(L.length?L.map(x=>`<label class="flex items-center gap-3 px-3 py-2.5 border-b border-line last:border-0 cursor-pointer hover:bg-bg"><input type="checkbox" data-v="${esc(x[0])}" ${dr.vals.has(x[0])?'checked':''} class="accent-[var(--acc)] w-4 h-4"><span class="flex-1 min-w-0"><span class="block font-medium truncate">${esc(x[0])}</span>${x[1]?`<span class="block text-muted text-[12.5px] truncate">${esc(x[1])}</span>`:''}</span><span class="text-muted text-[12.5px]">${k==='charger'?'':x[2]+' chargers'}</span></label>`).join(''):'<p class="p-4 text-muted text-[13.5px]">Nothing matches that search.</p>');
-  $('#cnt').text(dr.vals.size+' selected');
-  $('#picked').html([...dr.vals].map(v=>`<span class="chip">${esc(v)}<button data-x="${esc(v)}" aria-label="Remove ${esc(v)}" class="text-muted">&times;</button></span>`).join(''))}
- $('#save').prop('disabled',k!=='all'&&!dr.vals.size).text(S.edit>=0?'Save rule':'Add rule');}
-function drawer(){
- $('#type').html(['include','exclude'].map(t=>`<button data-t="${t}" class="btn ${dr.type===t?'sel':''}" style="${dr.type===t?'border-color:var(--'+(t==='include'?'acc':'exc')+')':''}">${t==='include'?'Include chargers':'Exclude chargers'}</button>`).join(''));
- $('#scopes').html(Object.keys(SC).map(k=>`<button data-k="${k}" class="btn text-left ${dr.scope===k?'sel':''}" style="${k==='all'?'grid-column:span 2':''}">${SC[k]}</button>`).join(''));vals();}
-function open(i){S.edit=i;const r=i>=0?S.rules[i]:{type:'include',scope:'state',vals:[]};dr={type:r.type,scope:r.scope,vals:new Set(r.vals)};$('#q').val('');$('#drT').text(i>=0?'Edit rule':'Add rule');drawer();$('#dr').addClass('open');setTimeout(()=>$('#q').focus(),240)}
+const pick=k=>dr.crit[k]||(dr.crit[k]=new Set());
+function vals(){const k=dr.tab,off=dr.all;$('#valBox').toggleClass('hidden',off);$('#allNote').toggleClass('hidden',!off);$('#tabs').toggleClass('opacity-40 pointer-events-none',off);
+ $('#tabs').html(DIM.map(d=>`<button data-k="${d}" class="btn btn-s ${k===d?'sel':''}">${SCL[d]}${pick(d).size?` <b class="text-acc">${pick(d).size}</b>`:''}</button>`).join(''));
+ if(!off){const q=$('#q').val().toLowerCase(),L=D[k].filter(x=>(x[0]+' '+x[1]).toLowerCase().includes(q));
+  $('#vals').html(L.length?L.map(x=>`<label class="flex items-center gap-3 px-3 py-2.5 border-b border-line last:border-0 cursor-pointer hover:bg-bg"><input type="checkbox" data-v="${esc(x[0])}" ${pick(k).has(x[0])?'checked':''} class="accent-[var(--acc)] w-4 h-4"><span class="flex-1 min-w-0"><span class="block font-medium truncate">${esc(x[0])}</span>${x[1]?`<span class="block text-muted text-[12.5px] truncate">${esc(x[1])}</span>`:''}</span><span class="text-muted text-[12.5px]">${k==='charger'?'':x[2]+' chargers'}</span></label>`).join(''):'<p class="p-4 text-muted text-[13.5px]">Nothing matches that search.</p>');
+  $('#cnt').text(pick(k).size+' selected in '+SCL[k]);
+  $('#picked').html(DIM.flatMap(d=>[...pick(d)].map(v=>`<span class="chip"><span class="text-muted">${SCL[d]}</span> ${esc(v)}<button data-x="${esc(v)}" data-d="${d}" aria-label="Remove ${esc(v)}" class="text-muted">&times;</button></span>`)).join(''))}
+ else $('#picked').empty();
+ $('#save').prop('disabled',!off&&!DIM.some(d=>pick(d).size)).text(S.edit>=0?'Save rule':'Add rule');}
+function drawer(){$('#type').html(['include','exclude'].map(t=>`<button data-t="${t}" class="btn ${dr.type===t?'sel':''}" style="${dr.type===t?'border-color:var(--'+(t==='include'?'acc':'exc')+')':''}">${t==='include'?'Include chargers':'Exclude chargers'}</button>`).join(''));vals();}
+function open(i){S.edit=i;const r=i>=0?S.rules[i]:{name:'',type:'include',all:false,crit:{}};dr={type:r.type,all:r.all,tab:'cpo',crit:{}};DIM.forEach(k=>dr.crit[k]=new Set(r.crit[k]||[]));$('#rname').val(r.name);$('#allc').prop('checked',r.all);$('#q').val('');$('#drT').text(i>=0?'Edit rule':'Add rule');drawer();$('#dr').addClass('open');setTimeout(()=>$('#rname').focus(),240)}
 function close(){$('#dr').removeClass('open')}
 
 /* events */
@@ -217,23 +273,103 @@ $('#title').on('input',function(){$(this).removeClass('err');$('#terr').addClass
 $('#start,#end').on('change',sum);
 $('#steps').on('click','.done',function(){go(+$(this).data('s'))});
 $('#next').on('click',function(){if(S.step<4)return go(S.step+1);
- $('#flow').html(`<div class="card p-10 text-center lg:col-span-2"><div class="mx-auto grid place-items-center w-12 h-12 rounded-full bg-acc-t text-acc text-xl font-bold">&#10003;</div><h2 class="text-xl font-bold mt-4">Campaign scheduled</h2><p class="text-muted mt-1 max-w-md mx-auto">${esc($('#title').val())} will start on ${fmt($('#start').val())}. Chargers are selected from your rules at that time, and you can pause the campaign whenever you need.</p><div class="mt-6 flex justify-center gap-2"><button class="btn" onclick="location.reload()">Create another</button><button class="btn btn-p">View campaign</button></div></div>`);$('#steps').hide();window.scrollTo({top:0});toast('Campaign scheduled')});
+ $('#flow').html(`<div class="card p-10 text-center lg:col-span-2"><div class="mx-auto grid place-items-center w-12 h-12 rounded-full bg-acc-t text-acc text-xl font-bold">&#10003;</div><h2 class="text-xl font-bold mt-4">Campaign scheduled</h2><p class="text-muted mt-1 max-w-md mx-auto">${esc($('#title').val())} will start on ${fmt($('#start').val())}. Chargers are selected from your rules at that time, and you can pause the campaign whenever you need.</p><div class="mt-6 flex justify-center gap-2"><button class="btn" onclick="location.reload()">Create another</button><button class="btn btn-p" id="viewC">View campaign</button></div></div>`);$('#steps').hide();window.scrollTo({top:0});toast('Campaign scheduled')});
 $('#back').on('click',()=>go(S.step-1));
 $('#draft').on('click',()=>toast('Draft saved'));
 $('#addRule').on('click',()=>open(-1));
 $('#rules').on('click','[data-edit]',function(){open(+$(this).data('edit'))}).on('click','[data-del]',function(){S.rules.splice(+$(this).data('del'),1);rules();sum();toast('Rule removed')});
 $('#type').on('click','[data-t]',function(){dr.type=$(this).data('t');drawer()});
-$('#scopes').on('click','[data-k]',function(){dr.scope=$(this).data('k');dr.vals=new Set();$('#q').val('');drawer()});
+$('#tabs').on('click','[data-k]',function(){dr.tab=$(this).data('k');$('#q').val('');vals()});
+$('#allc').on('change',function(){dr.all=this.checked;vals()});
 $('#q').on('input',vals);
-$('#vals').on('change','input',function(){const v=$(this).data('v');this.checked?dr.vals.add(v):dr.vals.delete(v);vals()});
-$('#picked').on('click','[data-x]',function(){dr.vals.delete($(this).data('x'));vals()});
-$('#all').on('click',()=>{const q=$('#q').val().toLowerCase();D[dr.scope].filter(x=>(x[0]+' '+x[1]).toLowerCase().includes(q)).forEach(x=>dr.vals.add(x[0]));vals()});
-$('#none').on('click',()=>{dr.vals=new Set();vals()});
-$('#save').on('click',()=>{const r={type:dr.type,scope:dr.scope,vals:dr.scope==='all'?[]:[...dr.vals]};S.edit>=0?S.rules[S.edit]=r:S.rules.push(r);close();rules();sum();toast(S.edit>=0?'Rule saved':'Rule added')});
+$('#vals').on('change','input',function(){const v=$(this).data('v'),t=pick(dr.tab);this.checked?t.add(v):t.delete(v);vals()});
+$('#picked').on('click','[data-x]',function(){pick($(this).data('d')).delete($(this).data('x'));vals()});
+$('#all').on('click',()=>{const q=$('#q').val().toLowerCase();D[dr.tab].filter(x=>(x[0]+' '+x[1]).toLowerCase().includes(q)).forEach(x=>pick(dr.tab).add(x[0]));vals()});
+$('#none').on('click',()=>{dr.crit[dr.tab]=new Set();vals()});
+$('#save').on('click',()=>{const crit={};DIM.forEach(k=>{if(pick(k).size)crit[k]=[...pick(k)]});const nm=$('#rname').val().trim()||(dr.all?'Every charger':DIM.filter(k=>crit[k]).map(k=>SCL[k]+': '+crit[k][0]+(crit[k].length>1?' +'+(crit[k].length-1):'')).join(', ')),r={name:nm,type:dr.type,all:dr.all,crit:dr.all?{}:crit};S.edit>=0?S.rules[S.edit]=r:S.rules.push(r);close();rules();sum();toast(S.edit>=0?'Rule saved':'Rule added')});
 $('#drX,#drC,#drBg').on('click',close);
 $(document).on('keydown',e=>{if(e.key==='Escape')close()});
 
-pkgs();go(1);
+/* wizard additions */
+$('#aud').on('change','input',function(){if(!$('#aud input:checked').length){this.checked=true;toast('Pick at least one')}$('#aud label').each(function(){$(this).toggleClass('sel',$(this).find('input').is(':checked'))});sum()});
+$('#newch').on('change',sum);
+$('#trig').html(['BootNotification','Heartbeat','StatusNotification','MeterValues','FirmwareStatusNotification','DiagnosticsStatusNotification'].map((t,i)=>`<button type="button" class="chip cursor-pointer ${i&&i<4?'sel':''}" aria-pressed="${!!(i&&i<4)}">${t}</button>`).join('')).on('click','button',function(){$(this).toggleClass('sel').attr('aria-pressed',$(this).hasClass('sel'))});
+$('#tg').on('change',function(){$('#tgBox').toggleClass('hidden',!this.checked)});
+
+/* campaigns list */
+const CP=[['AC-7 winter update','AC-7 Series, 2.4.1 / 1.3.0','Public and home','Nov 14 to Nov 21',512,1038,'In progress'],['DC-60 security patch','DC-60 Fast, 5.1.0','Public','Nov 18 to Nov 20',0,386,'Scheduled'],['AC-22 relay fix','AC-22 Pro, 3.0.2 / 2.0.1','Public','Oct 28 to Nov 2',497,512,'Completed'],['Home wallbox 1.9','Home-7 Wallbox, 1.9.0','Home','Nov 8 to Nov 15',140,610,'Paused']];
+const PC={'In progress':'p-run',Scheduled:'p-wait',Completed:'p-done',Paused:'p-wait'};
+$('#campRows').html(CP.map((c,i)=>`<tr class="go" data-c="${i}"><td class="font-semibold">${c[0]}</td><td>${c[1]}</td><td>${c[2]}</td><td class="whitespace-nowrap">${c[3]}</td><td><div class="bar"><i style="width:${c[4]/c[5]*100}%"></i></div><div class="text-muted text-[12.5px] mt-1">${c[4].toLocaleString()} of ${c[5].toLocaleString()} chargers</div></td><td><span class="pill ${PC[c[6]]}">${c[6]}</span></td></tr>`).join('')).on('click','tr',function(){const c=CP[$(this).data('c')];dash(c[0],`${c[1]}, for ${c[2].toLowerCase()}, ${c[3]}`)});
+const startNew=()=>{if($('#steps').is(':hidden')){location.hash='new';location.reload()}else view('New')};
+$('#newC').on('click',startNew);
+
+/* firmware files */
+const MM={Voltway:['AC-7 Series','DC-60 Fast'],'Orion Power':['AC-22 Pro'],Kinetic:['Home-7 Wallbox']};
+const FW=[['Voltway','AC-7 Series','2.4.1','1.3.0','18.2 MB','S3','4 Nov',3,'Active'],['Voltway','AC-7 Series','2.3.2','1.2.0','17.9 MB','S3','12 Oct',2,'Active'],['Voltway','AC-7 Series','2.1.0','1.0.4','17.1 MB','S3','2 Aug',1,'Archived'],['Voltway','DC-60 Fast','5.1.0','','42.6 MB','S3','29 Oct',1,'Active'],['Voltway','DC-60 Fast','5.0.3','','41.8 MB','S3','9 Sep',1,'Active'],['Orion Power','AC-22 Pro','3.0.2','2.0.1','21.4 MB','Server','12 Oct',1,'Active'],['Orion Power','AC-22 Pro','2.9.0','2.0.0','20.7 MB','Server','18 Jul',1,'Archived'],['Kinetic','Home-7 Wallbox','1.9.0','','9.3 MB','S3','8 Nov',1,'Active']];
+const opt=(a,all)=>(all?[`<option value="">${all}</option>`]:[]).concat(a.map(x=>`<option>${x}</option>`)).join('');
+const fmodels=()=>{const m=$('#fMake').val();$('#fModel').html(opt(m?MM[m]:[].concat(...Object.values(MM)),'All models'))};
+function files(){const m=$('#fMake').val(),d=$('#fModel').val(),q=$('#fQ').val().toLowerCase();
+ $('#fRows').html(FW.filter(f=>(!m||f[0]===m)&&(!d||f[1]===d)&&(f[2]+' '+f[3]).toLowerCase().includes(q)).map(f=>`<tr><td><div class="font-semibold">${f[1]}</div><div class="text-muted text-[12.5px]">${f[0]}</div></td><td>${f[2]}</td><td>${f[3]||'None'}</td><td>${f[4]}<div class="text-acc text-[12.5px]">Checksum verified</div></td><td><span class="chip">${f[5]==='S3'?'S3':'File server'}</span></td><td class="whitespace-nowrap">${f[6]}</td><td>${f[7]}</td><td><span class="pill ${f[8]==='Active'?'p-done':'p-wait'}">${f[8]}</span></td><td class="text-right">${f[8]==='Active'?`<button class="btn btn-s" data-use="${f[1]}">Create campaign</button>`:''}</td></tr>`).join('')||'<tr><td colspan="9" class="text-muted text-center py-8">No firmware matches.</td></tr>')}
+$('#fMake').html(opt(Object.keys(MM),'All makes')).on('change',()=>{fmodels();files()});$('#fModel,#fQ').on('input change',files);fmodels();files();
+$('#fRows').on('click','[data-use]',function(){const k=PK.findIndex(p=>p.model===$(this).data('use'));if(k>=0){S.pkg=k;pkgs();sum()}startNew()});
+const um=()=>$('#uModel').html(opt(MM[$('#uMake').val()]));$('#uMake').html(opt(Object.keys(MM))).on('change',um);um();
+$('#upBtn').on('click',()=>{$('#uProg').addClass('hidden');$('#up').addClass('open')});
+$('#upX,#upC,#upBg').on('click',()=>$('#up').removeClass('open'));
+$('#uSrc').on('click','[data-s]',function(){$('#uSrc button').removeClass('sel');$(this).addClass('sel');const f=$(this).data('s')==='file';$('#uFile').toggleClass('hidden',!f);$('#uUrl').toggleClass('hidden',f)});
+$('#uFile').on('click',()=>$('#uPick').click());$('#uPick').on('click',e=>e.stopPropagation()).on('change',function(){const f=this.files[0];if(f)$('#uName').text(f.name+' ('+(f.size/1048576).toFixed(1)+' MB)')});
+$('#uMain').on('input',function(){$(this).removeClass('err')});
+$('#upGo').on('click',function(){if(!$('#uMain').val().trim()){$('#uMain').addClass('err').focus();return}
+ const b=$(this).prop('disabled',true);$('#uProg').removeClass('hidden');let p=0;
+ const t=setInterval(()=>{p+=16;$('#uBar').css('width',Math.min(p,100)+'%');$('#uMsg').text(p<100?'Uploading the file':'Verifying the SHA-256 checksum');if(p>=100){clearInterval(t);setTimeout(()=>{FW.unshift([$('#uMake').val(),$('#uModel').val(),$('#uMain').val().trim(),$('#uRelay').val().trim(),'12.0 MB','S3','Today',0,'Active']);files();$('#up').removeClass('open');b.prop('disabled',false);$('#uMain,#uRelay').val('');$('#uBar').css('width',0);toast('Firmware uploaded and verified')},600)}},250)});
+
+/* live dashboard */
+const CH=[['NG-NOI-0412','Sector 62 Hub','completed',1],['NG-NOI-0413','Sector 62 Hub','completed',1],['NG-GUR-0207','DLF Cyber Hub','installing',1],['NG-DEL-0101','Connaught Place P2','relay_pending',1],['NG-DEL-0102','Connaught Place P2','downloading',2],['NG-NOI-0420','Sector 18 Mall','pending',0],['BW-MUM-0118','Andheri East Plaza','failed',3],['BW-MUM-0119','Andheri East Plaza','completed',2],['GP-BLR-0331','Koramangala Mall','initiated',1],['GP-BLR-0332','Koramangala Mall','pending',0],['MV-HYD-0054','HITEC City Square','completed',1],['MV-HYD-0055','HITEC City Square','pending',1],['NG-GUR-0208','DLF Cyber Hub','pending',0],['SR-AHM-0021','SG Highway Park','completed',1],['SR-AHM-0022','SG Highway Park','installing',2],['BW-PUN-0090','Phoenix Marketcity','pending',0],['NG-DEL-0103','Connaught Place P2','failed',3],['NG-NOI-0421','Sector 18 Mall','downloading',1],['GP-BLR-0333','Koramangala Mall','completed',1],['MV-HYD-0056','HITEC City Square','pending',0]];
+const ST={pending:['Waiting','p-wait'],initiated:['Command sent','p-run'],downloading:['Downloading','p-run'],installing:['Installing','p-run'],relay_pending:['Relay board pending','p-run'],completed:['Completed','p-done'],failed:['Failed','p-fail']};
+const grp=s=>s==='completed'?'done':s==='failed'?'fail':s==='pending'?'wait':'run';
+const RS=['Download failed, connection lost','Rebooted on the old version','No progress for 60 minutes'];
+const tm=n=>`${10+Math.floor(n/60)}:${String(n%60).padStart(2,'0')}`;
+const LG={initiated:'Command sent',downloading:'Downloading',installing:'Installing',relay_pending:'Rebooted on the new main version',completed:'Boot verified'},LD={initiated:'Attempt {n} of 3',downloading:'The charger is fetching the file',installing:'Firmware is being installed',relay_pending:'Relay board still on the old version, waiting 20 minutes',completed:'Main and relay versions match the target'};
+function mk(c,i){const [code,stn,st,att]=c,L=[[tm(2),'Added to campaign','Matched the audience rules']],lastFail=st==='failed'||(st==='pending'&&att>0);let n=2;
+ for(let a=1;a<=att;a++){L.push([tm(n+=12),'Command sent',`Attempt ${a} of 3`]);
+  if(a<att||lastFail){L.push([tm(n+=9),RS[(i+a)%3],`Attempt ${a} failed`]);if(!(st==='failed'&&a===att))L.push([tm(n+=1),'Retry scheduled',`Next try in ${a===1?15:30} minutes`])}
+  else{if(['downloading','installing','relay_pending','completed'].includes(st))L.push([tm(n+=3),LG.downloading,LD.downloading]);
+   if(['installing','relay_pending','completed'].includes(st))L.push([tm(n+=6),LG.installing,LD.installing]);
+   if(st==='relay_pending')L.push([tm(n+=8),LG.relay_pending,LD.relay_pending]);
+   if(st==='completed')L.push([tm(n+=9),LG.completed,LD.completed])}}
+ if(st==='failed')L.push([tm(n+1),'Attempts used up','No more retries for this charger']);
+ return {code,stn,st,att,L}}
+let DC=[],K={},tk,paused=0,flt='all',clock=0,ddI=-1;
+function kpi(){$('#kpi').html([['Chargers',K.total,''],['Completed',K.done,'text-acc'],['Updating',K.run,''],['Waiting',K.wait,''],['Failed',K.fail,'text-exc']].map(a=>`<div class="card p-4"><div class="text-muted text-[13px]">${a[0]}</div><div class="text-2xl font-bold ${a[2]}">${a[1].toLocaleString()}</div></div>`).join(''));$('#dBar').css('width',K.done/K.total*100+'%')}
+function drows(){const q=$('#dQ').val().toLowerCase();
+ $('#dF').html([['all','All'],['run','Updating'],['wait','Waiting'],['done','Completed'],['fail','Failed']].map(f=>`<button class="btn btn-s ${flt===f[0]?'sel':''}" data-f="${f[0]}">${f[1]}</button>`).join(''));
+ $('#dRows').html(DC.filter(c=>(flt==='all'||grp(c.st)===flt)&&c.code.toLowerCase().includes(q)).map(c=>{const l=c.L[c.L.length-1];return `<tr class="go" data-i="${DC.indexOf(c)}"><td class="font-semibold">${c.code}</td><td>${c.stn}</td><td><span class="pill ${ST[c.st][1]}">${ST[c.st][0]}</span></td><td>${c.att} of 3</td><td class="text-muted">${l[1]}<span class="text-[12.5px]"> at ${l[0]}</span></td></tr>`}).join('')||'<tr><td colspan="5" class="text-muted text-center py-8">No chargers match.</td></tr>')}
+function dd(i){const c=DC[i];ddI=i;$('#ddT').text(c.code);$('#ddS').text(c.stn);
+ $('#ddInfo').html(`<span class="pill ${ST[c.st][1]}">${ST[c.st][0]}</span><span class="chip">Attempt ${c.att} of 3</span><span class="chip">2.3.0 &rarr; 2.4.1</span>`);
+ $('#ddL').html(c.L.slice().reverse().map(e=>{const bad=/failed|old version|used up|No progress/.test(e[1]+e[2]),ok=/verified/.test(e[1]);return `<li class="flex gap-3"><span class="dot" style="${bad?'background:var(--exc)':ok?'background:var(--acc)':''}"></span><div><div class="font-semibold">${e[1]}</div><div class="text-muted text-[13px]">${e[2]}</div><div class="text-muted text-[12.5px]">${e[0]}</div></div></li>`}).join(''));$('#dd').addClass('open')}
+const NX={pending:'initiated',initiated:'downloading',downloading:'installing',installing:'completed',relay_pending:'completed'};
+function tick(){if(paused)return;const lv=DC.filter(c=>c.st!=='completed'&&c.st!=='failed');if(!lv.length)return;const c=lv[Math.floor(Math.random()*lv.length)];let to=NX[c.st];if(c.st==='installing'&&Math.random()<.2)to='relay_pending';
+ K[grp(c.st)]--;K[grp(to)]++;if(to==='initiated')c.att++;c.st=to;clock+=3;c.L.push([tm(180+clock),LG[to],LD[to].replace('{n}',c.att)]);
+ kpi();drows();if($('#dd').hasClass('open')&&DC[ddI]===c)dd(ddI)}
+function dash(name,sub,fresh){const src=fresh?CH.map(c=>[c[0],c[1],'pending',0]):CH;DC=src.map(mk);flt='all';paused=0;$('#dPause').text('Pause');$('#dQ').val('');
+ K=fresh?{total:est(),done:0,run:0,wait:est(),fail:0}:{total:1038,done:512,run:46,wait:441,fail:39};
+ $('#dT').text(name);$('#dS').text(sub);
+ $('#phase').html(fresh?'<span class="text-muted">Waiting for the start time</span>':'<span class="text-acc font-semibold">&#10003; Test group 10 of 10</span><span class="text-acc font-semibold">&#10003; Test messages 3 of 3 answered</span><span><span class="live mr-1.5"></span>Full rollout running</span>');
+ kpi();drows();view('Dash')}
+$('#dRows').on('click','tr[data-i]',function(){dd(+$(this).data('i'))});
+$('#dF').on('click','[data-f]',function(){flt=$(this).data('f');drows()});$('#dQ').on('input',drows);
+$('#dPause').on('click',function(){paused=!paused;$(this).text(paused?'Resume':'Pause');toast(paused?'Paused. Chargers already updating will finish.':'Campaign resumed')});
+$('#dExp').on('click',()=>toast('Report export started'));$('#dBack').on('click',()=>view('Camps'));
+$('#ddX,#ddBg').on('click',()=>$('#dd').removeClass('open'));
+$(document).on('keydown',e=>{if(e.key==='Escape')$('#dd,#up').removeClass('open')});
+$('#flow').on('click','#viewC',()=>dash($('#title').val(),`${PK[S.pkg].model}, ${PK[S.pkg].main}, for ${audT().toLowerCase()}`,true));
+
+/* views */
+function view(v){['Camps','Files','New','Dash'].forEach(x=>$('#v'+x).toggleClass('hidden',x!==v));
+ $('[data-v]').each(function(){if($(this).is('.tab,.nav'))$(this).toggleClass('on',$(this).data('v')===(v==='Files'?'Files':'Camps'))});
+ $('#draft').toggle(v==='New');const L={Camps:'Campaigns',Files:'Firmware files',New:'Campaigns / New campaign',Dash:'Campaigns / '+$('#dT').text()};
+ $('#crumb').html('Firmware / <span class="text-ink font-medium">'+esc(L[v])+'</span>');clearInterval(tk);if(v==='Dash')tk=setInterval(tick,3000);window.scrollTo(0,0)}
+$(document).on('click','[data-v]',function(e){e.preventDefault();view($(this).data('v'))});
+pkgs();go(1);view(location.hash==='#new'?'New':'Camps');
 });
 </script>
 </body>
